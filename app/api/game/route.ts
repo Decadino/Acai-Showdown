@@ -7,8 +7,8 @@ function response(data:unknown,status=200,cookie:string|null=null){return new Re
 function player(id:string,name:unknown,now:number):Player{if(typeof name!=='string'||!name.trim()||name.trim().length>20)throw Error('Enter a chef name of 1–20 characters.');return {id,name:name.trim(),joined:now,seen:now,active:true,score:0,ready:false,bowl:blankBowl(),ballot:crypto.randomUUID(),vote:null};}
 async function handle(req:Request){let cookie:string|null=null;try{
  const auth=await identity(req);cookie=auth.cookie;const id=auth.id;const url=new URL(req.url);const now=Date.now();
- if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==url.origin)return response({error:'Please open the game directly and try again.'},403,cookie);if(Number(req.headers.get('content-length')||0)>24000)return response({error:'That bowl has too much data.'},413,cookie);}
- const raw=req.method==='POST'?await req.text():'';if(raw.length>24000)return response({error:'That bowl has too much data.'},413,cookie);
+ if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==url.origin)return response({error:'Please open the game directly and try again.'},403,cookie);if(Number(req.headers.get('content-length')||0)>48000)return response({error:'That bowl has too much data.'},413,cookie);}
+ const raw=req.method==='POST'?await req.text():'';if(raw.length>48000)return response({error:'That bowl has too much data.'},413,cookie);
  const body=req.method==='POST'?JSON.parse(raw):{};const action=req.method==='GET'?'read':body.action;
  if(req.method==='GET'&&!url.searchParams.get('code'))return response({ok:true},200,cookie);
  const db=database();

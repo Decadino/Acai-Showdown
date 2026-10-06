@@ -1,6 +1,7 @@
 export const ROUND_MS=105000;
 export const VOTE_MS=20000;
 export const MAX_PLAYERS=6;
+export const MAX_PIECES=150;
 export const THEMES=[
  ['Tropical getaway','Bring island sunshine to your bowl.'],['Berry couture','Style a bowl fit for a fashion runway.'],['Midnight garden','A dark, dreamy bowl with something in bloom.'],['Golden hour','Warm colors, golden fruit, sunset energy.'],['Dessert after dark','Go rich, decadent, and a little dramatic.'],['Rainbow road','Arrange your ingredients into a spectrum.'],['Zen garden','Balance, clean lines, and breathing room.'],['Flower power','Build an edible bouquet.'],['Beach picnic','A bowl that belongs beside the ocean.'],['Cosmic crunch','Invent a tiny, delicious galaxy.'],['Pretty in pink','Make pink the star of the show.'],['Jungle jewels','Go green with flashes of tropical color.'],['Breakfast club','A beautifully arranged morning ritual.'],['Chocolate daydream','Chocolate lovers, this is your moment.'],['Minimal masterpiece','Make a big impression with three ingredient types or fewer.'],['Fruit fireworks','An explosion of color from the center outward.'],['Strawberry social','Give strawberries the starring role.'],['Moonlight mosaic','Make a pattern from tiny delicious pieces.'],['Pistachio paradise','Celebrate green, gold, and a little crunch.'],['Sunday in Paris','Elegant, intentional, café-worthy.'],['A bowl with a face','Give your creation a personality.'],['Sweet symmetry','Make both sides beautifully balanced.'],['The wild card','Surprise everyone with an unexpected combination.'],['Signature serve','Make the bowl you would put your name on.']
 ].map(([name,description],id)=>({id,name,description}));
@@ -15,7 +16,7 @@ export type Player={id:string;name:string;joined:number;seen:number;active:boole
 export type Room={code:string;host:string;phase:'lobby'|'build'|'vote'|'results'|'final';round:number;deadline:number;themes:number[];players:Player[];scored:boolean;created:number};
 export function cleanBowl(input:unknown):Bowl{
  if(!input||typeof input!=='object')throw Error('Your bowl could not be read.');const b=input as Bowl;
- if(!BASES.some(x=>x.id===b.base)||!Array.isArray(b.pieces)||b.pieces.length>64)throw Error('Use up to 64 toppings.');
+ if(!BASES.some(x=>x.id===b.base)||!Array.isArray(b.pieces)||b.pieces.length>MAX_PIECES)throw Error(`Use up to ${MAX_PIECES} toppings.`);
  const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
  return {base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
 }

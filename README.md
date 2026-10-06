@@ -24,7 +24,7 @@ With two players, each can only vote for the other, so a tie is normal. Three or
 - Strawberry, banana, mango, blueberry, kiwi, raspberry, pineapple, dragonfruit, granola, coconut flakes, almond slivers, cacao nibs, chia, pistachio, chocolate chips, edible flowers.
 - Honey, chocolate sauce, peanut butter, and vanilla yogurt drizzles.
 - Photographic food assets composited into the same ceramic bowl renderer on your canvas, voting cards, and results.
-- Four placement modes, ingredient landing animations, animated drizzles, undo, clear, and a 64-piece limit.
+- Four placement modes, ingredient landing animations, animated drizzles, undo, clear, and a 150-piece limit.
 - Edit toppings: select or drag a piece, adjust rotation and size, nudge its position, duplicate, bring forward, or remove it. Edits save to the shared game.
 - Round-winner badges and a personal confetti celebration, including tied wins. Reduced-motion preferences disable these animations.
 - A shared server-controlled clock and server-validated votes and scores.
