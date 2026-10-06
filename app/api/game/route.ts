@@ -1,0 +1,47 @@
+import {database} from '@/lib/storage';
+import {advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
+export const dynamic='force-dynamic';
+const headers={'Cache-Control':'no-store','Content-Type':'application/json'};
+async function identity(req:Request){let token=req.headers.get('cookie')?.match(/(?:^|;\s*)acai_session=([a-f0-9]{64})(?:;|$)/)?.[1];const fresh=!token;if(!token)token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));const id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return {id,cookie:fresh?`acai_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${new URL(req.url).protocol==='https:'?'; Secure':''}`:null};}
+function response(data:unknown,status=200,cookie:string|null=null){return new Response(JSON.stringify(data),{status,headers:{...headers,...(cookie?{'Set-Cookie':cookie}:{})}})}
+function player(id:string,name:unknown,now:number):Player{if(typeof name!=='string'||!name.trim()||name.trim().length>20)throw Error('Enter a chef name of 1–20 characters.');return {id,name:name.trim(),joined:now,seen:now,active:true,score:0,ready:false,bowl:blankBowl(),ballot:crypto.randomUUID(),vote:null};}
+async function handle(req:Request){let cookie:string|null=null;try{
+ const auth=await identity(req);cookie=auth.cookie;const id=auth.id;const url=new URL(req.url);const now=Date.now();
+ if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==url.origin)return response({error:'Please open the game directly and try again.'},403,cookie);if(Number(req.headers.get('content-length')||0)>24000)return response({error:'That bowl has too much data.'},413,cookie);}
+ const raw=req.method==='POST'?await req.text():'';if(raw.length>24000)return response({error:'That bowl has too much data.'},413,cookie);
+ const body=req.method==='POST'?JSON.parse(raw):{};const action=req.method==='GET'?'read':body.action;
+ if(req.method==='GET'&&!url.searchParams.get('code'))return response({ok:true},200,cookie);
+ const db=database();
+ if(action==='create'){
+  const p=player(id,body.name,now);await db.prepare('DELETE FROM rooms WHERE code IN (SELECT code FROM rooms WHERE expires < ? LIMIT 100)').bind(now).run();
+  const count=await db.prepare('SELECT COUNT(*) AS n FROM rooms WHERE owner = ? AND expires > ?').bind(id,now).first<{n:number}>();if((count?.n||0)>=10)return response({error:'You have 10 active rooms. Rejoin one or try again tomorrow.'},429,cookie);
+  for(let i=0;i<5;i++){const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const bytes=crypto.getRandomValues(new Uint8Array(6));const code=Array.from(bytes,x=>alphabet[x%alphabet.length]).join('');const themes=THEMES.map(x=>x.id);for(let j=themes.length-1;j>0;j--){const k=crypto.getRandomValues(new Uint32Array(1))[0]%(j+1);[themes[j],themes[k]]=[themes[k],themes[j]];}
+   const room:Room={code,host:id,phase:'lobby',round:0,deadline:0,themes:themes.slice(0,3),players:[p],scored:false,created:now};const inserted=await db.prepare('INSERT OR IGNORE INTO rooms (code,owner,data,version,expires) VALUES (?,?,?,0,?)').bind(code,id,JSON.stringify(room),now+43200000).run();if(inserted.meta.changes)return response(publicRoom(room,id,now),200,cookie);
+  }throw Error('Could not create a room. Please try again.');
+ }
+ const code=String(body.code||url.searchParams.get('code')||'').trim().toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code))throw Error('Enter the six-character room code.');
+ for(let attempt=0;attempt<8;attempt++){
+  const row=await db.prepare('SELECT data,version,expires FROM rooms WHERE code = ?').bind(code).first<{data:string;version:number;expires:number}>();if(!row||row.expires<now)return response({error:'Room not found or expired. Ask your host for a new code.'},404,cookie);
+  const room=JSON.parse(row.data) as Room;let me=room.players.find(p=>p.id===id);let changed=false;
+  if(action==='join'){
+   if(me){me.active=true;me.seen=now;changed=true;}else{if(room.phase!=='lobby')throw Error('This game has started. Join after the host opens a new game.');if(room.players.length>=MAX_PLAYERS)throw Error('This room is full. Up to six chefs can play.');me=player(id,body.name,now);room.players.push(me);changed=true;}
+  }
+  if(!me||!me.active)return response({error:'Join this room first.',needsJoin:true},403,cookie);
+  if(now-me.seen>12000){me.seen=now;changed=true;}
+  changed=advance(room,now)||changed;
+  if(action==='start'||action==='next'||action==='rematch'){
+   if(room.host!==id)throw Error('Only the host can start a round.');
+   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');room.round=0;room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
+   else {if((action==='start'&&room.phase!=='lobby')||(action==='next'&&room.phase!=='results'))throw Error('The room has moved to another stage.');if(room.players.filter(p=>p.active&&now-p.seen<25000).length<2)throw Error('At least two connected players are needed.');startRound(room,now);}changed=true;
+  }else if(action==='save'||action==='submit'){
+   if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');me.bowl=cleanBowl(body.bowl);if(action==='submit')me.ready=true;changed=true;
+  }else if(action==='vote'){
+   if(room.phase!=='vote'||room.round!==body.round)throw Error('Voting has closed.');if(me.vote)throw Error('Your vote is already recorded.');const target=room.players.find(p=>p.ballot===body.ballot);if(!target||target.id===id)throw Error('Choose another chef’s bowl.');me.vote=target.ballot;changed=true;advance(room,now);
+  }else if(action==='leave'){me.active=false;if(room.phase==='lobby')room.players=room.players.filter(p=>p.id!==id);advance(room,now);changed=true;}
+  else if(!['read','join'].includes(action))throw Error('Unknown game action.');
+  if(!changed)return response(publicRoom(room,id,now),200,cookie);
+  const result=await db.prepare('UPDATE rooms SET data = ?, version = version + 1 WHERE code = ? AND version = ?').bind(JSON.stringify(room),code,row.version).run();if(result.meta.changes)return response(action==='leave'?{ok:true}:publicRoom(room,id,now),200,cookie);
+ }
+ return response({error:'The room is busy. Please try once more.'},409,cookie);
+ }catch(e){const message=e instanceof Error?e.message:'Could not connect to the game.';if(/D1|SQLITE|binding|database/i.test(message)){console.error('Game storage error',message);return response({error:'The game service is temporarily unavailable. Your bowl is still on this screen.'},503,cookie);}return response({error:message},400,cookie);}}
+export const GET=handle;export const POST=handle;

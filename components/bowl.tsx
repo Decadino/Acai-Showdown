@@ -1,0 +1,24 @@
+"use client";
+import {useId,type KeyboardEvent} from 'react';
+import {INGREDIENTS,type Bowl as BowlData,type Piece} from '@/lib/game';
+export function IngredientImage({index}:{index:number}){return <span className="ingredient-image" aria-hidden="true" style={{backgroundImage:'url(/images/ingredients-atlas.png)',backgroundPosition:`${(index%4)*100/3}% ${Math.floor(index/4)*100/3}%`}}/>}
+const sauces:Record<string,string>={honey:'#e7a934',cocoa:'#502718',peanut:'#bf844b',vanilla:'#fff7e6'};
+export function Bowl({bowl,onPlace,label='A decorated açaí bowl',small=false}:{bowl:BowlData;onPlace?:(x:number,y:number)=>void;label?:string;small?:boolean}){
+ const id=useId().replaceAll(':','');
+ const keyboard=(e:KeyboardEvent<HTMLDivElement>)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onPlace?.(50,50);}};
+ return <div className={`bowl-art ${small?'small':''} ${onPlace?'editable':''}`} role={onPlace?'button':'img'} aria-label={onPlace?'Your bowl. Tap to place the selected ingredient. Press Enter to place at the center.':label} tabIndex={onPlace?0:undefined} onKeyDown={keyboard} onClick={onPlace?e=>{const rect=e.currentTarget.getBoundingClientRect();const x=(e.clientX-rect.left)/rect.width*100,y=(e.clientY-rect.top)/rect.height*100;if(Math.hypot(x-50,y-50)<=38)onPlace(x,y)}:undefined}>
+ <img className={`bowl-base base-${bowl.base}`} src="/images/acai-bowl.png" alt="" draggable={false}/>
+ <div className="food-layer">{bowl.pieces.map((p,i)=>{const item=INGREDIENTS.find(x=>x.id===p.id);if(!item)return null;const sauce=sauces[p.id];return <span key={i} className={`food-piece ${sauce?'sauce-piece':''}`} style={{left:`${p.x}%`,top:`${p.y}%`,width:`${p.size}%`,height:`${p.size}%`,transform:`translate(-50%,-50%) rotate(${p.rotation}deg)`}}>{sauce?<svg viewBox="0 0 100 100" aria-hidden="true"><defs><filter id={`${id}-${i}`}><feDropShadow dx="0" dy="1" stdDeviation=".7" floodOpacity=".18"/></filter></defs><path d="M17 18 C95 12 92 25 21 33 S9 48 79 49 S91 64 22 65 S10 81 77 82" fill="none" stroke={sauce} strokeWidth="3.2" strokeLinecap="round" filter={`url(#${id}-${i})`}/><path d="M17 17 C95 11 92 24 21 32 S9 47 79 48 S91 63 22 64 S10 80 77 81" fill="none" stroke="white" strokeOpacity=".2" strokeWidth=".7"/></svg>:<IngredientImage index={item.sprite}/>}</span>})}</div>
+ </div>
+}
+export function placePieces(id:string,x:number,y:number,mode:string,size:number):Piece[]{
+ const item=INGREDIENTS.find(i=>i.id===id)!;const drizzle=item.category==='Drizzle';const out:Piece[]=[];const add=(px:number,py:number,rotation:number)=>{const distance=Math.hypot(px-50,py-50);if(distance>34){px=50+(px-50)*34/distance;py=50+(py-50)*34/distance;}out.push({id,x:px,y:py,rotation,size:drizzle?38:size});};
+ if(drizzle||mode==='single')add(x,y,drizzle?-20:Math.random()*50-25);
+ else if(mode==='arc'){const angle=Math.atan2(y-50,x-50);for(let i=0;i<5;i++){const a=angle+(i-2)*.32;add(50+28*Math.cos(a),50+28*Math.sin(a),a*180/Math.PI+90);}}
+ else if(mode==='row'){for(let i=0;i<5;i++)add(x+(i-2)*9,y+(i-2)*3,-25+i*10);}
+ else {for(let i=0;i<5;i++){const a=i*2.4;add(x+Math.cos(a)*(5+i*1.7),y+Math.sin(a)*(5+i*1.7),i*63);}}
+ return out;
+}
+export const sampleBowl:BowlData={base:'classic',title:'The violet hour',pieces:[...placePieces('banana',27,37,'arc',19),...placePieces('strawberry',71,35,'arc',18),...placePieces('blueberry',62,72,'row',13),...placePieces('granola',33,60,'scatter',12),...placePieces('coconut',52,47,'scatter',8),{id:'honey',x:51,y:51,size:38,rotation:20},{id:'flower',x:45,y:70,size:13,rotation:-10}]};
+
+sampleBowl.pieces=sampleBowl.pieces.map((p,i)=>({...p,rotation:(i*23)%60-30}));
