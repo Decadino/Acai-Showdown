@@ -7,11 +7,11 @@ await Promise.all([b.req({action:'join',code,name:b.name}),c.req({action:'join',
 assert.equal((await b.req({action:'start',code})).status,400);console.log('PASS: non-host start rejected.');
 const bowl={base:'classic',title:'Test bowl',pieces:[{id:'strawberry',x:50,y:50,size:15,rotation:0}]};
 for(let round=1;round<=3;round++){
- r=await a.req({action:round===1?'start':'next',code});assert.equal(r.round,round,JSON.stringify(r));assert.equal(r.deadline-r.serverNow,60000);assert.equal(r.entries.length,0);
+ r=await a.req({action:round===1?'start':'next',code});assert.equal(r.round,round,JSON.stringify(r));assert.equal(r.deadline-r.serverNow,105000);assert.equal(r.entries.length,0);
  let result=await a.req({action:'save',code,round,bowl});assert.equal(result.myBowl.pieces.length,1);assert.equal((await b.req(null,code)).myBowl.pieces.length,0);
  const reconnected=new Chef('Alex');reconnected.cookie=a.cookie;assert.equal((await reconnected.req(null,code)).myBowl.title,'Test bowl');
  await Promise.all([a.req({action:'submit',code,round,bowl}),b.req({action:'submit',code,round,bowl:{...bowl,title:'Maya bowl'}}),c.req({action:'submit',code,round,bowl:{...bowl,title:'Sam bowl'}})]);
- assert.equal((await a.req({action:'save',code,round,bowl})).status,400);console.log('PASS round '+round+': 60-second deadline, isolated drafts, reconnect, submission lock.');
+ assert.equal((await a.req({action:'save',code,round,bowl})).status,400);console.log('PASS round '+round+': 105-second deadline, isolated drafts, reconnect, submission lock.');
  const until=r.deadline-Date.now()+150;const heartbeat=setInterval(()=>Promise.all([a.req(null,code),b.req(null,code),c.req(null,code)]),8000);await new Promise(resolve=>setTimeout(resolve,Math.max(0,until)));clearInterval(heartbeat);
  const views=await Promise.all([a.req(null,code),b.req(null,code),c.req(null,code)]);assert(views.every(v=>v.phase==='vote'));assert(views[0].entries.every(e=>!('name' in e)));const ownA=views[0].entries.find(e=>e.mine).ballot,ownB=views[1].entries.find(e=>e.mine).ballot;
  assert.equal((await a.req({action:'vote',code,round,ballot:ownA})).status,400);

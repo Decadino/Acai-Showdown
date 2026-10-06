@@ -1,4 +1,4 @@
-export const ROUND_MS=60000;
+export const ROUND_MS=105000;
 export const VOTE_MS=20000;
 export const MAX_PLAYERS=6;
 export const THEMES=[
@@ -8,7 +8,7 @@ export const INGREDIENTS=[
  ['strawberry','Strawberry','Fruit'],['banana','Banana','Fruit'],['mango','Mango','Fruit'],['blueberry','Blueberry','Fruit'],['kiwi','Kiwi','Fruit'],['raspberry','Raspberry','Fruit'],['pineapple','Pineapple','Fruit'],['dragonfruit','Dragonfruit','Fruit'],['granola','Granola','Crunch'],['coconut','Coconut flakes','Crunch'],['almond','Almond slivers','Crunch'],['cacao','Cacao nibs','Crunch'],['chia','Chia seeds','Crunch'],['pistachio','Pistachio','Crunch'],['chocolate','Chocolate chips','Crunch'],['flower','Edible flowers','Finish'],['honey','Golden honey','Drizzle'],['cocoa','Chocolate sauce','Drizzle'],['peanut','Peanut butter','Drizzle'],['vanilla','Vanilla yogurt','Drizzle']
 ].map(([id,name,category],sprite)=>({id,name,category,sprite}));
 export const BASES=[{id:'classic',name:'Classic açaí',color:'#6a193e'},{id:'pitaya',name:'Pink pitaya',color:'#d63382'},{id:'blue',name:'Blue spirulina',color:'#2482a3'}];
-export type Piece={id:string;x:number;y:number;rotation:number;size:number};
+export type Piece={uid?:string;id:string;x:number;y:number;rotation:number;size:number};
 export type Bowl={base:string;pieces:Piece[];title:string};
 export const blankBowl=():Bowl=>({base:'classic',pieces:[],title:''});
 export type Player={id:string;name:string;joined:number;seen:number;active:boolean;score:number;ready:boolean;bowl:Bowl;ballot:string;vote:string|null};
@@ -16,7 +16,7 @@ export type Room={code:string;host:string;phase:'lobby'|'build'|'vote'|'results'
 export function cleanBowl(input:unknown):Bowl{
  if(!input||typeof input!=='object')throw Error('Your bowl could not be read.');const b=input as Bowl;
  if(!BASES.some(x=>x.id===b.base)||!Array.isArray(b.pieces)||b.pieces.length>64)throw Error('Use up to 64 toppings.');
- const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
+ const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
  return {base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
 }
 export function advance(room:Room,now:number){
