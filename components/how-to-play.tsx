@@ -1,0 +1,18 @@
+"use client";
+import {Button} from '@/components/ui/button';
+export default function HowToPlay({onClose}:{onClose:()=>void}){
+return <section className="help-panel organized-help" aria-labelledby="how-to-play-title">
+ <header className="help-heading"><div><p className="eyebrow">HOW TO PLAY</p><h2 id="how-to-play-title">Build a bowl. Vote. Take the crown.</h2><p>2–6 chefs · 3 rounds · 5 minutes to create by default</p></div><Button onClick={onClose}>Got it</Button></header>
+ <div className="help-steps">
+  <article className="help-card help-purple"><span className="help-step">01 · JOIN</span><h3>Bring your friends</h3><p>Create a room and share its invite link with 1–5 friends. The host chooses the mode and build timer.</p></article>
+  <article className="help-card help-mint"><span className="help-step">02 · CREATE</span><h3>Make it yours</h3><p>Pick a topping and an arrangement, then tap your bowl. Swipe to slice, spread, pipe drizzle, or sprinkle.</p><p><strong>Edit toppings:</strong> drag, rotate, resize, duplicate, or remove pieces.</p></article>
+  <article className="help-card help-peach"><span className="help-step">03 · VOTE</span><h3>Show off &amp; choose your favorites</h3><p>You have <strong>30 seconds</strong> for the showcase and voting. Names stay hidden until results.</p><ul><li><strong>Best bowl:</strong> gives its chef +1 point.</li><li><strong>Most creative</strong> and <strong>Would actually eat:</strong> separate audience honors.</li></ul><p>Vote for other chefs. One bowl can receive all three votes. Reactions are just for fun.</p></article>
+  <article className="help-card help-blue"><span className="help-step">ROUND MODES</span><h3>A fresh challenge every round</h3><ul><li><strong>Free creation:</strong> follow the theme.</li><li><strong>Freestyle kitchen:</strong> hands-on creation.</li><li><strong>Budget battle:</strong> 60 coins. Every piece costs coins; bases are free. Undo or remove to get coins back.</li><li><strong>Mirror menu:</strong> copy the reference bowl. A 75% match earns +2 points.</li></ul></article>
+ </div>
+ <div className="help-details">
+  <article className="help-card help-purple"><span className="help-step">SURPRISE MUTATIONS</span><h3>Watch the banner above your bowl</h3><p>Some rounds add a twist. The banner explains your rule.</p><ul><li><strong>Mystery Box:</strong> reveal a hidden ingredient when you place it.</li><li><strong>Color Lock:</strong> build around the chosen color. Reach 55% for +1 point.</li><li><strong>One-Handed:</strong> make the most of limited picks.</li><li><strong>No Repeats:</strong> the first chef to use an ingredient claims it for that round.</li></ul></article>
+  <article className="help-card help-gold"><span className="help-step">POINTS &amp; WINNING</span><h3>Every detail can count</h3><dl className="help-score-list"><div><dt>Each best-bowl vote</dt><dd>+1</dd></div><div><dt>Complete your private goal</dt><dd>+1</dd></div><div><dt>Name your bowl</dt><dd>+1</dd></div><div><dt>Each customer request</dt><dd>+1</dd></div><div><dt>Complete all customer requests</dt><dd>+1 bonus</dd></div><div><dt>Complete the halfway twist</dt><dd>+2</dd></div></dl><p><strong>Highest total after three rounds wins.</strong> Ties share the crown. Mode and mutation bonuses count too.</p></article>
+ </div>
+ <div className="help-bottom"><p><strong>Playing with two?</strong> Private goals and challenge bonuses can break a tie. With three or more, voting becomes more competitive.</p><p><strong>Host disconnected?</strong> Another connected player takes over after 45 seconds.</p><Button className="primary" onClick={onClose}>Ready to create</Button></div>
+</section>;
+}
