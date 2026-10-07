@@ -28,3 +28,15 @@ button[data-slot=button]{height:auto;white-space:normal}input[data-slot=input]{h
 @media(prefers-reduced-motion:reduce){.twist-open,.cinematic-bowl,.round-winning-bowl{animation:none}.prep-fruit>span{transition:none}}
 
 .fantasy-food-icon{width:75px;height:75px;max-width:100%;filter:drop-shadow(0 4px 5px #69377714)}.collection-tabs{display:flex;gap:5px;margin:16px 0 12px;flex-wrap:wrap}.collection-tabs button{min-height:34px;padding:7px 9px;font-size:11px;border-radius:9px;flex:1;white-space:nowrap}.collection-tabs [aria-pressed=true]{background:#eadbfa;color:#6730a3;border-color:#cab0e3}.fantasy-lab-note{background:linear-gradient(115deg,#f2e7ff,#e4f7f2);color:#795299;padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.5;margin:0 0 15px}.fantasy-label{font-size:8px;letter-spacing:1px;background:#f0e5ff;color:#8a52b7;padding:3px 6px;border-radius:5px}.drizzle-swatch:not(.honey):not(.cocoa):not(.peanut):not(.vanilla) span{background:currentColor;box-shadow:inset 0 1px 2px #fff8}.ingredient-tile:has(.fantasy-food-icon){background:linear-gradient(150deg,#fff,#faf6ff)}.ingredient-tile:has(.fantasy-food-icon)[aria-pressed=true]{background:#f0e5ff}
+
+/* Shared dropdowns: branded surfaces with one bounded scrolling viewport. */
+[data-slot="select-trigger"]{min-height:44px;height:auto;border:1px solid #d9c7ee;border-radius:13px;background:#fff;color:var(--ink);padding:10px 14px;font-size:14px;box-shadow:0 2px 5px #39244d06}
+[data-slot="select-trigger"][data-state="open"]{border-color:#9e78d4;background:#f5effb;box-shadow:0 0 0 3px #a785d21c}
+[data-slot="select-trigger"]>svg{color:var(--purple);opacity:.8}
+[data-slot="select-content"]{z-index:100;min-width:var(--radix-select-trigger-width);max-width:calc(100vw - 24px);max-height:min(340px,var(--radix-select-content-available-height));overflow:hidden;background:#fffdfF;color:var(--ink);border:1px solid #ded0ee;border-radius:17px;padding:5px;box-shadow:0 14px 40px #39244d24,0 3px 10px #39244d0d;font-family:'DM Sans',sans-serif}
+[data-slot="select-viewport"]{max-height:min(280px,calc(var(--radix-select-content-available-height) - 64px));overflow-y:auto!important;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:#c9b0e3 #f5effb;padding:3px}
+[data-slot="select-item"]{min-height:42px;padding:10px 34px 10px 12px;border-radius:10px;font-size:14px;line-height:1.4;cursor:pointer;color:var(--ink);outline:none}
+[data-slot="select-item"][data-highlighted]{background:#f0e7fa;color:#562a91}
+[data-slot="select-item"][data-state="checked"]{background:#eaddf9;color:var(--purple);font-weight:700}
+[data-slot="select-item-indicator"]{color:var(--purple)}
+[data-slot="select-scroll-up-button"],[data-slot="select-scroll-down-button"]{min-height:24px;background:#f6f0fb;color:var(--purple);border-radius:9px;cursor:pointer}
