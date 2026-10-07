@@ -18,6 +18,10 @@ With two players, each can only vote for the other, so a tie is normal. Three or
 
 ## Included
 
+- Stylized 3D ceramic bowls and all 20 topping/drizzle models, with camera orbit, zoom, ray-based placement, dragging, landing animations, and raised drizzles that follow the food.
+- A persistent 2D/3D switch keeps the original photographic design available. Both views use the same bowl and multiplayer data.
+- 3D renders on demand, shares ingredient geometry, limits device pixel ratio, pauses offscreen scenes, cleans up GPU resources, and falls back to 2D when WebGL is unavailable.
+
 - Random round mutations: Mystery Box, Color Lock, One-Handed, Gravity Flip, and No Repeats. Each game has at least one mutation and no repeated mutation in its three rounds.
 - Mystery ingredients are chosen separately for each player, hidden until placement, and protected against removal.
 - Color Lock shows a rough color estimate and awards one bonus point at 55% dominance.
