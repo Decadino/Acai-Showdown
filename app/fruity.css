@@ -51,3 +51,7 @@ button[data-slot="switch"] [data-slot="switch-thumb"]{position:absolute;display:
 button[data-slot="switch"] [data-slot="switch-thumb"][data-state="checked"]{transform:translateX(18px)}
 [data-theme="dark"] button[data-slot="switch"]{background:#70545f}[data-theme="dark"] button[data-slot="switch"][data-state="checked"]{background:#a44978}
 button[data-slot="switch"][data-size="sm"]{width:38px;min-width:38px;height:24px;min-height:24px;max-height:24px}button[data-slot="switch"][data-size="sm"] [data-slot="switch-thumb"]{width:16px;height:16px}button[data-slot="switch"][data-size="sm"] [data-slot="switch-thumb"][data-state="checked"]{transform:translateX(14px)}
+
+[data-theme="dark"] .mode-banner{background:#3e2936;color:var(--ink);border:1px solid #795066}
+[data-theme="dark"] .mode-banner p{color:var(--muted)}
+[data-theme="dark"] .mode-banner>svg{color:#e59bbd}
