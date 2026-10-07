@@ -6,12 +6,12 @@ import {Switch} from './ui/switch';
 import {Dialog,DialogContent,DialogTitle,DialogDescription,DialogTrigger} from './ui/dialog';
 import {Select,SelectTrigger,SelectValue,SelectContent,SelectItem} from './ui/select';
 type Preferences={theme:'light'|'dark'|'system';motion:boolean;rotate:boolean;hints:boolean;sound:boolean;graphics:'auto'|'high'|'low';guides:boolean};
-const defaults:Preferences={theme:'system',motion:true,rotate:true,hints:true,sound:true,graphics:'auto',guides:false};
+const defaults:Preferences={theme:'light',motion:true,rotate:true,hints:true,sound:true,graphics:'auto',guides:false};
 const Context=createContext({preferences:defaults,update:(_patch:Partial<Preferences>)=>{}});
 export const useSettings=()=>useContext(Context);
 export function SettingsProvider({children}:{children:ReactNode}){
 const [preferences,setPreferences]=useState(defaults),[loaded,setLoaded]=useState(false);
-useEffect(()=>{try{const p=JSON.parse(localStorage.getItem('acai-settings')||'{}');setPreferences({theme:['light','dark','system'].includes(p.theme)?p.theme:'system',motion:typeof p.motion==='boolean'?p.motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,rotate:typeof p.rotate==='boolean'?p.rotate:true,hints:typeof p.hints==='boolean'?p.hints:true,sound:typeof p.sound==='boolean'?p.sound:true,graphics:['auto','high','low'].includes(p.graphics)?p.graphics:'auto',guides:typeof p.guides==='boolean'?p.guides:false});}catch{}setLoaded(true)},[]);
+useEffect(()=>{try{const p=JSON.parse(localStorage.getItem('acai-settings')||'{}');setPreferences({theme:['light','dark','system'].includes(p.theme)?p.theme:'light',motion:typeof p.motion==='boolean'?p.motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,rotate:typeof p.rotate==='boolean'?p.rotate:true,hints:typeof p.hints==='boolean'?p.hints:true,sound:typeof p.sound==='boolean'?p.sound:true,graphics:['auto','high','low'].includes(p.graphics)?p.graphics:'auto',guides:typeof p.guides==='boolean'?p.guides:false});}catch{}setLoaded(true)},[]);
 useEffect(()=>{if(!loaded)return;const media=matchMedia('(prefers-color-scheme: dark)');const apply=()=>{document.documentElement.dataset.theme=preferences.theme==='system'?(media.matches?'dark':'light'):preferences.theme;document.documentElement.dataset.motion=preferences.motion?'full':'reduced';document.documentElement.dataset.hints=preferences.hints?'show':'hide';document.documentElement.dataset.sound=preferences.sound?'on':'off';};apply();media.addEventListener('change',apply);try{localStorage.setItem('acai-settings',JSON.stringify(preferences))}catch{}return()=>{media.removeEventListener('change',apply)}},[preferences,loaded]);
 return <Context.Provider value={{preferences,update:patch=>setPreferences(p=>({...p,...patch}))}}>{children}</Context.Provider>;
 }
