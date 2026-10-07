@@ -1,9 +1,11 @@
 "use client";
+import {FantasyIcon} from './fantasy-icon';
+import {FANTASY_BY_ID,SAUCE_COLORS} from '@/lib/fantasy-ingredients';
 import {fitPiece} from '@/lib/bowl-bounds';
 import {useId,useRef,useState,type KeyboardEvent} from 'react';
 import {INGREDIENTS,type Bowl as BowlData,type Piece} from '@/lib/game';
-export function IngredientImage({index}:{index:number}){return <span className="ingredient-image" aria-hidden="true" style={{backgroundImage:'url(/images/ingredients-atlas.png)',backgroundPosition:`${(index%4)*100/3}% ${Math.floor(index/4)*100/3}%`}}/>}
-const sauces:Record<string,string>={honey:'#e7a934',cocoa:'#502718',peanut:'#bf844b',vanilla:'#fff7e6'};
+export function IngredientImage({index}:{index:number}){const item=INGREDIENTS[index];if(item&&FANTASY_BY_ID[item.id])return <FantasyIcon id={item.id}/>;return <span className="ingredient-image" aria-hidden="true" style={{backgroundImage:'url(/images/ingredients-atlas.png)',backgroundPosition:`${(index%4)*100/3}% ${Math.floor(index/4)*100/3}%`}}/>}
+const sauces=SAUCE_COLORS;
 export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePlacements=false,label='A decorated açaí bowl',small=false}:{bowl:BowlData;autoOrbit?:boolean;gesture?:'quick'|'drizzle'|'sprinkle'|'spread';drawColor?:string;onDraw?:(points:{x:number;y:number}[])=>void;interactionKey?:string;onPlace?:(x:number,y:number)=>void;onSelect?:(index:number)=>void;onMove?:(index:number,x:number,y:number)=>void;selectedIndex?:number;animatePlacements?:boolean;label?:string;small?:boolean}){
  const id=useId().replaceAll(':','');
  const root=useRef<HTMLDivElement>(null),pointer=useRef<{index:number;x:number;y:number}|null>(null);const [drag,setDrag]=useState<{index:number;x:number;y:number}|null>(null);

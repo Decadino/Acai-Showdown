@@ -1,3 +1,4 @@
+import {FANTASY_INGREDIENTS} from './fantasy-ingredients.ts';
 import type {Bowl} from './game';
 export const ORDERS=[
 {id:'tropical',customer:'Isla',title:'A little island escape',requests:['Use mango','Add a crunchy topping','Leave out chocolate'],ingredients:['mango','crunch','no-chocolate']},
@@ -8,9 +9,9 @@ export const ORDERS=[
 {id:'simple',customer:'Remy',title:'Small bowl, big personality',requests:['Use any fruit','Add a crunchy topping','Give the bowl a name'],ingredients:['fruit','crunch','name']}
 ] as const;
 export const TWISTS=[{id:'symmetry',name:'A little balance',description:'Create at least three matching pairs across the center.'},{id:'green',name:'Fresh green finish',description:'Place at least three pieces of kiwi or pistachio.'},{id:'pink',name:'Pretty in pink',description:'Place at least three strawberries, raspberries, or dragonfruit pieces.'},{id:'smile',name:'A fruity smile',description:'Place five fruits in the lower arc and two fruits above them as eyes.'},{id:'handmade',name:'Made by hand',description:'Slice a fruit, spread the base, and draw a freehand drizzle.'}] as const;
-const FRUIT=['strawberry','banana','mango','blueberry','kiwi','raspberry','pineapple','dragonfruit'];
-const CRUNCH=['granola','coconut','almond','cacao','chia','pistachio','chocolate'];
-const SAUCE=['honey','cocoa','peanut','vanilla'];
+const FRUIT=['strawberry','banana','mango','blueberry','kiwi','raspberry','pineapple','dragonfruit',...FANTASY_INGREDIENTS.filter(v=>v.category==='Fruit').map(v=>v.id)];
+const CRUNCH=['granola','coconut','almond','cacao','chia','pistachio','chocolate',...FANTASY_INGREDIENTS.filter(v=>v.category==='Crunch').map(v=>v.id)];
+const SAUCE=['honey','cocoa','peanut','vanilla',...FANTASY_INGREDIENTS.filter(v=>v.category==='Drizzle').map(v=>v.id)];
 export function orderProgress(b:Bowl,id:string){const o=ORDERS.find(v=>v.id===id);return (o?.ingredients||[]).map(rule=>rule==='crunch'?b.pieces.some(p=>CRUNCH.includes(p.id)):rule==='fruit'?b.pieces.some(p=>FRUIT.includes(p.id)):rule==='drizzle'?b.pieces.some(p=>SAUCE.includes(p.id)):rule==='name'?b.title.trim().length>=3:rule==='no-chocolate'?!b.pieces.some(p=>['chocolate','cocoa','cacao'].includes(p.id)):b.pieces.some(p=>p.id===rule));}
 export function twistProgress(b:Bowl,id:string){if(id==='handmade')return !!b.prepared?.length&&!!b.spread?.length&&b.pieces.some(p=>!!p.path?.length);if(id==='green'||id==='pink')return b.pieces.filter(p=>(id==='green'?['kiwi','pistachio']:['strawberry','raspberry','dragonfruit']).includes(p.id)).length>=3;if(id==='smile')return b.pieces.filter(p=>FRUIT.includes(p.id)&&p.y>55&&Math.abs(p.x-50)<28).length>=5&&b.pieces.filter(p=>FRUIT.includes(p.id)&&p.y<45).length>=2;const used=new Set<number>();let pairs=0;for(const p of b.pieces.filter(p=>p.x<46)){const j=b.pieces.findIndex((q,j)=>!used.has(j)&&q.x>54&&q.id===p.id&&Math.hypot(q.x-(100-p.x),q.y-p.y)<6);if(j>=0){used.add(j);pairs++;}}return pairs>=3;}
 export const ACHIEVEMENTS=[{id:'berry',name:'Berry Artist',description:'Use five different fruit types in a multiplayer bowl.',reward:'Mosaic porcelain bowl'},{id:'perfect',name:'Perfect Order',description:'Fulfil all three customer requests in one round.',reward:'Rose marble countertop'},{id:'crowd',name:'Crowd Favorite',description:'Win three audience awards across completed matches.',reward:'Lustre drizzle finish'}] as const;

@@ -92,3 +92,7 @@ Berry Artist and Perfect Order are earned from server-scored round bowls. Crowd 
 
 
 Voting now lasts at most 30 seconds, with three-second rotating showcases. Existing voting rounds are shortened to at most 30 seconds on their next request. No Repeats retains its original single-owner claims.
+
+
+## Fantasy ingredient lab
+30 imaginary ingredients extend the original 20 choices to 50: eight fruits, eight crunch toppings, eight decorative finishes, and six drizzles. `lib/fantasy-ingredients.ts` defines names, palette, prices, silhouettes, and descriptions. The renderer provides matching procedural 3D shapes and ingredient-tray SVG previews. Fantasy drizzles use the same surface-following geometry, progressive pour animation, saved freehand paths, and boundaries as classic sauces. Mystery Boxes sample all non-drizzle ingredients. Color Lock and fruit/crunch/drizzle customer rules recognize the new collection. Classics, Fantasy lab, and All ingredients filters organize the tray.
