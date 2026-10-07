@@ -3,7 +3,7 @@ import {useId,useRef,useState,type KeyboardEvent} from 'react';
 import {INGREDIENTS,type Bowl as BowlData,type Piece} from '@/lib/game';
 export function IngredientImage({index}:{index:number}){return <span className="ingredient-image" aria-hidden="true" style={{backgroundImage:'url(/images/ingredients-atlas.png)',backgroundPosition:`${(index%4)*100/3}% ${Math.floor(index/4)*100/3}%`}}/>}
 const sauces:Record<string,string>={honey:'#e7a934',cocoa:'#502718',peanut:'#bf844b',vanilla:'#fff7e6'};
-export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePlacements=false,label='A decorated açaí bowl',small=false}:{bowl:BowlData;onPlace?:(x:number,y:number)=>void;onSelect?:(index:number)=>void;onMove?:(index:number,x:number,y:number)=>void;selectedIndex?:number;animatePlacements?:boolean;label?:string;small?:boolean}){
+export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePlacements=false,label='A decorated açaí bowl',small=false}:{bowl:BowlData;interactionKey?:string;onPlace?:(x:number,y:number)=>void;onSelect?:(index:number)=>void;onMove?:(index:number,x:number,y:number)=>void;selectedIndex?:number;animatePlacements?:boolean;label?:string;small?:boolean}){
  const id=useId().replaceAll(':','');
  const root=useRef<HTMLDivElement>(null),pointer=useRef<{index:number;x:number;y:number}|null>(null);const [drag,setDrag]=useState<{index:number;x:number;y:number}|null>(null);
  const keyboard=(e:KeyboardEvent<HTMLDivElement>)=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();onPlace?.(50,50);}};
@@ -15,7 +15,8 @@ export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePla
 }
 export function placePieces(id:string,x:number,y:number,mode:string,size:number):Piece[]{
  const item=INGREDIENTS.find(i=>i.id===id)!;const drizzle=item.category==='Drizzle';const out:Piece[]=[];const add=(px:number,py:number,rotation:number)=>{const distance=Math.hypot(px-50,py-50);if(distance>34){px=50+(px-50)*34/distance;py=50+(py-50)*34/distance;}out.push({id,x:px,y:py,rotation,size:drizzle?38:size});};
- if(drizzle||mode==='single')add(x,y,drizzle?-20:Math.random()*50-25);
+ if(drizzle)add(50,50,-20);
+ else if(mode==='single')add(x,y,Math.random()*50-25);
  else if(mode==='arc'){const angle=Math.atan2(y-50,x-50);for(let i=0;i<5;i++){const a=angle+(i-2)*.32;add(50+28*Math.cos(a),50+28*Math.sin(a),a*180/Math.PI+90);}}
  else if(mode==='row'){for(let i=0;i<5;i++)add(x+(i-2)*9,y+(i-2)*3,-25+i*10);}
  else {for(let i=0;i<5;i++){const a=i*2.4;add(x+Math.cos(a)*(5+i*1.7),y+Math.sin(a)*(5+i*1.7),i*63);}}
