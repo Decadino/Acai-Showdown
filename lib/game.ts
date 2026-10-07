@@ -25,17 +25,17 @@ export function cleanBowl(input:unknown,budget:number|null=null):Bowl{
  const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
  if(budget!==null&&bowlCost({...b,pieces})>budget)throw Error(`This round has a ${budget}-coin budget. Remove some toppings before saving.`);
  if(b.gravity&&!['pour','toppings','sealed'].includes(b.gravity))throw Error('Invalid gravity stage.');
- return {...(b.gravity?{gravity:b.gravity}:{}),base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
+ return {base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
 }
 
 export const MUTATIONS=[
  {id:'mystery',name:'Mystery Box',tag:'A delicious gamble',description:'Place your mystery ingredient to reveal it. Once revealed, that piece stays in your bowl.'},
  {id:'color',name:'Color Lock',tag:'One color. Endless ideas.',description:'Make the announced color dominate your bowl. Reach 55% on the color meter to earn one bonus point.'},
  {id:'slots',name:'One-Handed',tag:'Less is delicious',description:'Three ingredient types total: your base plus two toppings or drizzles. Place as many pieces of those types as you like.'},
- {id:'gravity',name:'Gravity Flip',tag:'Dessert, upside down',description:'Pour a drizzle first, add your toppings next, and seal everything with your base last. The base covers your toppings!'},
  {id:'exclusive',name:'No Repeats',tag:'Claim it before they do',description:'The first chef to place an ingredient owns it for the round. Other chefs must improvise. Bases are shared.'}
 ] as const;
-export type MutationId=typeof MUTATIONS[number]['id'];
+// Legacy ID is retained only to recognize and migrate rooms saved before removal.
+export type MutationId=typeof MUTATIONS[number]['id']|'gravity';
 export type Mutation={id:MutationId;color?:string};
 export const COLORS=[{id:'pink',name:'Pink',hex:'#ee6fa5'},{id:'gold',name:'Golden',hex:'#f4bf4e'},{id:'green',name:'Green',hex:'#83b848'},{id:'purple',name:'Purple',hex:'#9055cf'},{id:'blue',name:'Blue',hex:'#4caad9'}];
 const FOOD_COLORS:Record<string,string[]>={strawberry:['pink'],banana:['gold'],mango:['gold'],blueberry:['blue','purple'],kiwi:['green'],raspberry:['pink'],pineapple:['gold'],dragonfruit:['pink'],granola:['gold'],coconut:['white'],almond:['gold'],cacao:['brown'],chia:['purple'],pistachio:['green'],chocolate:['brown'],flower:['pink','purple'],honey:['gold'],cocoa:['brown'],peanut:['gold'],vanilla:['white']};

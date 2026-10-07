@@ -23,6 +23,10 @@ async function handle(req:Request){let cookie:string|null=null;try{
  for(let attempt=0;attempt<8;attempt++){
   const row=await db.prepare('SELECT data,version,expires FROM rooms WHERE code = ?').bind(code).first<{data:string;version:number;expires:number}>();if(!row||row.expires<now)return response({error:'Room not found or expired. Ask your host for a new code.'},404,cookie);
   const room=JSON.parse(row.data) as Room;let me=room.players.find(p=>p.id===id);let changed=false;
+  // Retire Gravity Flip in active rooms as well as already shuffled round decks.
+  if(room.mutation?.id==='gravity'){room.mutation=null;changed=true;}
+  if(room.mutationDeck?.some(m=>m?.id==='gravity')){room.mutationDeck=room.mutationDeck.map(m=>m?.id==='gravity'?null:m);changed=true;}
+  for(const p of room.players)if(p.bowl.gravity){delete p.bowl.gravity;changed=true;}
   if(action==='join'){
    if(me){me.active=true;me.seen=now;changed=true;}else{if(room.phase!=='lobby')throw Error('This game has started. Join after the host opens a new game.');if(room.players.length>=MAX_PLAYERS)throw Error('This room is full. Up to six chefs can play.');me=player(id,body.name,now);room.players.push(me);changed=true;}
   }

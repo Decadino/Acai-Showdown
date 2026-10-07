@@ -22,11 +22,9 @@ With two players, each can only vote for the other, so a tie is normal. Three or
 - A persistent 2D/3D switch keeps the original photographic design available. Both views use the same bowl and multiplayer data.
 - 3D renders on demand, shares ingredient geometry, limits device pixel ratio, pauses offscreen scenes, cleans up GPU resources, and falls back to 2D when WebGL is unavailable.
 
-- Random round mutations: Mystery Box, Color Lock, One-Handed, Gravity Flip, and No Repeats. Each game has at least one mutation and no repeated mutation in its three rounds.
 - Mystery ingredients are chosen separately for each player, hidden until placement, and protected against removal.
 - Color Lock shows a rough color estimate and awards one bonus point at 55% dominance.
 - One-Handed allows one base and two topping or drizzle types, with the normal piece limit.
-- Gravity Flip requires drizzle, then toppings, then the base, which renders above the toppings.
 - No Repeats gives the first successful server claim exclusive use of an ingredient for the round. Claims persist if pieces are removed and reset next round.
 - The solo practice mutation selector lets players learn each rule; shared ingredient claims apply in multiplayer.
 
