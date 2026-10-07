@@ -85,3 +85,12 @@ button.practice-link:hover:not(:disabled),[data-theme="dark"] button.practice-li
 [data-theme="dark"] .ingredient-tile:has(.fantasy-food-icon):not([aria-pressed="true"]){background:#2d233a;color:var(--ink);border-color:var(--line)}
 [data-theme="dark"] .ingredient-tile:has(.fantasy-food-icon):not([aria-pressed="true"]):hover:not(:disabled){background:#3a2b4b;border-color:#785798}
 [data-theme="dark"] .fantasy-label{background:#46305e;color:#e0bfff}
+
+/* Selected controls need their own dark surface, not the light ink variable. */
+[data-theme="dark"] :is(.modes,.studio-mode,.three-controls,.pace-buttons,.visual-switch,.cooking-tools) button[aria-pressed="true"]{background:#49325f;color:#f0e2ff;border-color:#9770bb;box-shadow:none}
+[data-theme="dark"] :is(.modes,.studio-mode,.three-controls,.pace-buttons,.visual-switch,.cooking-tools) button[aria-pressed="true"]:hover:not(:disabled){background:#563c6e;color:#f0e2ff;border-color:#b189d4}
+[data-theme="dark"] .cosmetic-option[aria-pressed="true"]{background:#49325f;color:#f0e2ff;border-color:#9770bb}
+[data-theme="dark"] .round-kind{background:#352443;color:#d5b3f7}
+[data-theme="dark"] .prep-board{background:linear-gradient(145deg,#302539,#382938);border-color:#554052;color:var(--ink)}
+[data-theme="dark"] .prep-board p:not(.eyebrow){color:#c4afbd}
+[data-theme="dark"] .prep-board button{background:#43304b;color:#f0e2ff;border-color:#6f527b}
