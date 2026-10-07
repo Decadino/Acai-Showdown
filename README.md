@@ -18,6 +18,14 @@ With two players, each can only vote for the other, so a tie is normal. Three or
 
 ## Included
 
+- Random round mutations: Mystery Box, Color Lock, One-Handed, Gravity Flip, and No Repeats. Each game has at least one mutation and no repeated mutation in its three rounds.
+- Mystery ingredients are chosen separately for each player, hidden until placement, and protected against removal.
+- Color Lock shows a rough color estimate and awards one bonus point at 55% dominance.
+- One-Handed allows one base and two topping or drizzle types, with the normal piece limit.
+- Gravity Flip requires drizzle, then toppings, then the base, which renders above the toppings.
+- No Repeats gives the first successful server claim exclusive use of an ingredient for the round. Claims persist if pieces are removed and reset next round.
+- The solo practice mutation selector lets players learn each rule; shared ingredient claims apply in multiplayer.
+
 - 27 theme cards, including Beach day, Dessert monster, and Fancy café. Hosts can choose each round’s theme.
 - 23 ingredient choices: three bases, 16 photographic toppings, and four drizzles.
 - Classic açaí, pink pitaya, and blue spirulina bases.
@@ -56,6 +64,8 @@ Install Node.js 22.13 or newer, then run `npm ci` and `npm run dev`. Build with 
 ```text
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_purple_hobgoblin.sql
 ```
+
+`node --experimental-strip-types scripts/check-mutations.mjs` checks the mutation API logic with a simulated database and clock, including simultaneous claims, validation, privacy, scores, and round resets; it also confirms the local Worker creates a real room.
 
 `node --experimental-strip-types scripts/check-round-features.mjs` verifies budget boundaries, 150-piece limits, refunds, private ballots, tied awards, score isolation, timeout transitions, and two real multiplayer rounds using three separate session cookies on the local server at port 5173.
 

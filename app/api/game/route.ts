@@ -1,5 +1,5 @@
 import {database} from '@/lib/storage';
-import {AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
+import {saveMutatedBowl,revealMystery,rollMutations,AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store','Content-Type':'application/json'};
 async function identity(req:Request){let token=req.headers.get('cookie')?.match(/(?:^|;\s*)acai_session=([a-f0-9]{64})(?:;|$)/)?.[1];const fresh=!token;if(!token)token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));const id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return {id,cookie:fresh?`acai_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${new URL(req.url).protocol==='https:'?'; Secure':''}`:null};}
@@ -31,14 +31,16 @@ async function handle(req:Request){let cookie:string|null=null;try{
   changed=advance(room,now)||changed;
   if(action==='start'||action==='next'||action==='rematch'){
    if(room.host!==id)throw Error('Only the host can start a round.');
-   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');room.round=0;room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
+   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');room.round=0;room.mutationDeck=rollMutations();room.mutation=null;room.claims={};room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
    else {if((action==='start'&&room.phase!=='lobby')||(action==='next'&&room.phase!=='results'))throw Error('The room has moved to another stage.');if(room.players.filter(p=>p.active&&now-p.seen<25000).length<2)throw Error('At least two connected players are needed.');startRound(room,now);}changed=true;
    }else if(action==='settings'){
    if(room.host!==id||room.phase!=='lobby')throw Error('Only the host can choose themes in the lobby.');
    if(!Array.isArray(body.themes)||body.themes.length!==3||!body.themes.every((t:unknown)=>Number.isInteger(t)&&THEMES.some(x=>x.id===t)))throw Error('Choose a theme for each round.');
    room.themes=body.themes;room.budgetRound=2;room.audienceAwards=true;changed=true;
   }else if(action==='save'||action==='submit'){
-   if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');me.bowl=cleanBowl(body.bowl,roundBudget(room));if(action==='submit')me.ready=true;changed=true;
+   if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');if(action==='submit'&&room.mutation?.id==='gravity'&&body.bowl?.gravity!=='sealed')throw Error('Choose your base last to seal the bowl before finishing.');saveMutatedBowl(room,me,body.bowl);if(action==='submit')me.ready=true;changed=true;
+  }else if(action==='mystery'){
+   if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');revealMystery(room,me,body.bowl,body.x,body.y,body.size);changed=true;
   }else if(action==='vote'){
    if(room.phase!=='vote'||room.round!==body.round)throw Error('Voting has closed.');if(me.vote)throw Error('Your vote is already recorded.');const target=room.players.find(p=>p.ballot===body.ballot);if(!target||target.id===id)throw Error('Choose another chef’s bowl.');me.vote=target.ballot;changed=true;advance(room,now);
    }else if(action==='award'){

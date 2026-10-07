@@ -13,10 +13,10 @@ export const INGREDIENTS=[
 ].map(([id,name,category],sprite)=>({id,name,category,sprite,price:[2,1,3,2,2,3,2,4,1,1,2,2,1,3,2,4,2,3,3,2][sprite]}));
 export const BASES=[{id:'classic',name:'Classic açaí',color:'#6a193e'},{id:'pitaya',name:'Pink pitaya',color:'#d63382'},{id:'blue',name:'Blue spirulina',color:'#2482a3'}];
 export type Piece={uid?:string;id:string;x:number;y:number;rotation:number;size:number};
-export type Bowl={base:string;pieces:Piece[];title:string};
+export type Bowl={base:string;pieces:Piece[];title:string;gravity?:'pour'|'toppings'|'sealed'};
 export const blankBowl=():Bowl=>({base:'classic',pieces:[],title:''});
-export type Player={id:string;name:string;joined:number;seen:number;active:boolean;score:number;ready:boolean;bowl:Bowl;ballot:string;vote:string|null;awardVotes?:Partial<Record<AwardId,string>>};
-export type Room={budgetRound?:number;audienceAwards?:boolean;code:string;host:string;phase:'lobby'|'build'|'vote'|'results'|'final';round:number;deadline:number;themes:number[];players:Player[];scored:boolean;created:number};
+export type Player={mysteryId?:string;mysteryPiece?:string;id:string;name:string;joined:number;seen:number;active:boolean;score:number;ready:boolean;bowl:Bowl;ballot:string;vote:string|null;awardVotes?:Partial<Record<AwardId,string>>};
+export type Room={mutationDeck?:(Mutation|null)[];mutation?:Mutation|null;claims?:Record<string,string>;budgetRound?:number;audienceAwards?:boolean;code:string;host:string;phase:'lobby'|'build'|'vote'|'results'|'final';round:number;deadline:number;themes:number[];players:Player[];scored:boolean;created:number};
 export function bowlCost(bowl:Bowl){return bowl.pieces.reduce((total,p)=>total+(INGREDIENTS.find(i=>i.id===p.id)?.price||0),0);}
 export function roundBudget(room:Room){return room.round===room.budgetRound?ROUND_BUDGET:null;}
 export function cleanBowl(input:unknown,budget:number|null=null):Bowl{
@@ -24,25 +24,65 @@ export function cleanBowl(input:unknown,budget:number|null=null):Bowl{
  if(!BASES.some(x=>x.id===b.base)||!Array.isArray(b.pieces)||b.pieces.length>MAX_PIECES)throw Error(`Use up to ${MAX_PIECES} toppings.`);
  const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
  if(budget!==null&&bowlCost({...b,pieces})>budget)throw Error(`This round has a ${budget}-coin budget. Remove some toppings before saving.`);
- return {base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
+ if(b.gravity&&!['pour','toppings','sealed'].includes(b.gravity))throw Error('Invalid gravity stage.');
+ return {...(b.gravity?{gravity:b.gravity}:{}),base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
 }
+
+export const MUTATIONS=[
+ {id:'mystery',name:'Mystery Box',tag:'A delicious gamble',description:'Place your mystery ingredient to reveal it. Once revealed, that piece stays in your bowl.'},
+ {id:'color',name:'Color Lock',tag:'One color. Endless ideas.',description:'Make the announced color dominate your bowl. Reach 55% on the color meter to earn one bonus point.'},
+ {id:'slots',name:'One-Handed',tag:'Less is delicious',description:'Three ingredient types total: your base plus two toppings or drizzles. Place as many pieces of those types as you like.'},
+ {id:'gravity',name:'Gravity Flip',tag:'Dessert, upside down',description:'Pour a drizzle first, add your toppings next, and seal everything with your base last. The base covers your toppings!'},
+ {id:'exclusive',name:'No Repeats',tag:'Claim it before they do',description:'The first chef to place an ingredient owns it for the round. Other chefs must improvise. Bases are shared.'}
+] as const;
+export type MutationId=typeof MUTATIONS[number]['id'];
+export type Mutation={id:MutationId;color?:string};
+export const COLORS=[{id:'pink',name:'Pink',hex:'#ee6fa5'},{id:'gold',name:'Golden',hex:'#f4bf4e'},{id:'green',name:'Green',hex:'#83b848'},{id:'purple',name:'Purple',hex:'#9055cf'},{id:'blue',name:'Blue',hex:'#4caad9'}];
+const FOOD_COLORS:Record<string,string[]>={strawberry:['pink'],banana:['gold'],mango:['gold'],blueberry:['blue','purple'],kiwi:['green'],raspberry:['pink'],pineapple:['gold'],dragonfruit:['pink'],granola:['gold'],coconut:['white'],almond:['gold'],cacao:['brown'],chia:['purple'],pistachio:['green'],chocolate:['brown'],flower:['pink','purple'],honey:['gold'],cocoa:['brown'],peanut:['gold'],vanilla:['white']};
+export function colorScore(bowl:Bowl,color:string){let total=600,match=({classic:'purple',pitaya:'pink',blue:'blue'} as Record<string,string>)[bowl.base]===color?600:0;for(const p of bowl.pieces){const area=p.size*p.size*(INGREDIENTS.find(i=>i.id===p.id)?.category==='Drizzle'?.12:.65);total+=area;if(FOOD_COLORS[p.id]?.includes(color))match+=area;}return Math.round(match/total*100);}
+export function pickedTypes(bowl:Bowl){return 1+new Set(bowl.pieces.map(p=>p.id)).size;}
+function randomIndex(n:number){return crypto.getRandomValues(new Uint32Array(1))[0]%n;}
+export function rollMutations():(Mutation|null)[]{const pool=[...MUTATIONS];const deck:(Mutation|null)[]=[];for(let i=0;i<3;i++){if(i===0||randomIndex(100)<70){const choice=pool.splice(randomIndex(pool.length),1)[0];deck.push({id:choice.id,...(choice.id==='color'?{color:COLORS[randomIndex(COLORS.length)].id}:{})});}else deck.push(null);}return deck.sort(()=>Math.random()-.5);}
+export function mutationError(next:Bowl,previous:Bowl,mutation:Mutation|null|undefined,lockedUid?:string,claims:Record<string,string>={},playerId=''){
+ if(mutation?.id==='slots'&&pickedTypes(next)>3)return 'Only three picks: one base and two topping or drizzle types.';
+ if(mutation?.id==='mystery'&&lockedUid){const original=previous.pieces.find(p=>p.uid===lockedUid);const retained=next.pieces.filter(p=>p.uid===lockedUid);if(retained.length!==1||original&&retained[0].id!==original.id)return 'Your mystery piece is locked in. You can move or resize it, but cannot remove it.';}
+ if(mutation?.id==='exclusive'){const taken=next.pieces.find(p=>claims[p.id]&&claims[p.id]!==playerId);if(taken)return (INGREDIENTS.find(i=>i.id===taken.id)?.name||'That ingredient')+' was claimed by another chef. Pick something else.';}
+ if(mutation?.id==='gravity'){
+  const before=previous.gravity||'pour',after=next.gravity||'pour';
+  if(before==='sealed'&&(JSON.stringify(next.pieces)!==JSON.stringify(previous.pieces)||next.base!==previous.base||after!=='sealed'))return 'Your upside-down bowl is sealed. Give it a name and finish!';
+  if(before==='pour'&&after==='toppings'&&!previous.pieces.some(p=>INGREDIENTS.find(i=>i.id===p.id)?.category==='Drizzle'))return 'Pour your drizzle before moving to toppings.';
+  if(before==='pour'&&next.pieces.some(p=>INGREDIENTS.find(i=>i.id===p.id)?.category!=='Drizzle'))return 'Finish pouring before placing toppings.';
+  if(before==='toppings'&&after==='sealed'&&JSON.stringify(next.pieces)!==JSON.stringify(previous.pieces))return 'Place your toppings first, then choose the base to seal them.';
+  if((before==='toppings'&&after==='pour')||(before==='pour'&&after==='sealed'))return 'Gravity Flip goes drizzle, toppings, then base.';
+  if(after!=='pour'&&!next.pieces.some(p=>INGREDIENTS.find(i=>i.id===p.id)?.category==='Drizzle'))return 'Pour at least one drizzle before adding toppings.';
+  if(after==='pour'&&next.pieces.some(p=>INGREDIENTS.find(i=>i.id===p.id)?.category!=='Drizzle'))return 'Drizzle goes first in Gravity Flip.';
+  if(before==='toppings'){const added=next.pieces.filter(p=>!previous.pieces.some(old=>old.uid===p.uid));if(added.some(p=>INGREDIENTS.find(i=>i.id===p.id)?.category==='Drizzle'))return 'The pouring stage is over. Add toppings, then seal with a base.';}
+ }
+ return null;
+}
+export function saveMutatedBowl(room:Room,player:Player,input:unknown){const next=cleanBowl(input,roundBudget(room));const message=mutationError(next,player.bowl,room.mutation,player.mysteryPiece,room.claims,player.id);if(message)throw Error(message);if(room.mutation?.id==='exclusive'){room.claims??={};for(const p of next.pieces)room.claims[p.id]=player.id;}player.bowl=next;return next;}
+export function revealMystery(room:Room,player:Player,input:unknown,x:number,y:number,size:number){
+ if(room.mutation?.id!=='mystery'||!player.mysteryId||player.mysteryPiece)throw Error('Your mystery ingredient has already been revealed.');
+ const next=cleanBowl(input,roundBudget(room));const uid=crypto.randomUUID();const revealed=cleanBowl({...next,pieces:[...next.pieces,{uid,id:player.mysteryId,x,y,size,rotation:0}]},roundBudget(room));player.bowl=revealed;player.mysteryPiece=uid;return revealed;
+}
+
 export function advance(room:Room,now:number){
  let changed=false;
  if(room.phase==='build'&&now>=room.deadline){room.phase='vote';room.deadline=now+VOTE_MS;changed=true;}
  const eligible=room.players.filter(p=>p.active);
  if(room.phase==='vote'&&(now>=room.deadline||(eligible.length>0&&eligible.every(p=>p.vote&&(!room.audienceAwards||AWARDS.every(a=>p.awardVotes?.[a.id])))))){
-  if(!room.scored){for(const p of room.players){const target=room.players.find(t=>t.ballot===p.vote&&t.id!==p.id);if(target)target.score++;}room.scored=true;}
+  if(!room.scored){for(const p of room.players){const target=room.players.find(t=>t.ballot===p.vote&&t.id!==p.id);if(target)target.score++;}if(room.mutation?.id==='color')for(const p of room.players)if(colorScore(p.bowl,room.mutation.color||'pink')>=55)p.score++;room.scored=true;}
   room.phase=room.round>=3?'final':'results';room.deadline=0;changed=true;
  }
  const host=room.players.find(p=>p.id===room.host);
  if(!host?.active||now-host.seen>45000){const next=room.players.filter(p=>p.active&&now-p.seen<20000).sort((a,b)=>a.joined-b.joined)[0];if(next&&next.id!==room.host){room.host=next.id;changed=true;}}
  return changed;
 }
-export function startRound(room:Room,now:number){room.round++;room.phase='build';room.deadline=now+ROUND_MS;room.scored=false;for(const p of room.players){p.bowl=blankBowl();p.ready=false;p.vote=null;p.awardVotes={};p.ballot=crypto.randomUUID();}}
+export function startRound(room:Room,now:number){room.mutationDeck??=rollMutations();room.round++;room.mutation=room.mutationDeck[room.round-1]||null;room.claims={};room.phase='build';room.deadline=now+ROUND_MS;room.scored=false;for(const p of room.players){p.bowl=blankBowl();if(room.mutation?.id==='gravity')p.bowl.gravity='pour';p.mysteryId=room.mutation?.id==='mystery'?INGREDIENTS[randomIndex(16)].id:undefined;p.mysteryPiece=undefined;p.ready=false;p.vote=null;p.awardVotes={};p.ballot=crypto.randomUUID();}}
 export function publicRoom(room:Room,id:string,now:number){
  const me=room.players.find(p=>p.id===id);const reveal=room.phase==='results'||room.phase==='final';
- return {code:room.code,host:room.host,phase:room.phase,round:room.round,deadline:room.deadline,serverNow:now,theme:THEMES[room.themes[Math.max(0,room.round-1)]],themes:room.themes,budgetRound:room.budgetRound||0,budget:roundBudget(room),audienceAwards:!!room.audienceAwards,me:id,
+ return {code:room.code,host:room.host,phase:room.phase,round:room.round,deadline:room.deadline,serverNow:now,theme:THEMES[room.themes[Math.max(0,room.round-1)]],themes:room.themes,mutation:room.phase==='lobby'?null:room.mutation||null,claims:room.claims||{},myMystery:room.mutation?.id==='mystery'?{revealed:!!me?.mysteryPiece,uid:me?.mysteryPiece||null,ingredient:me?.mysteryPiece?me.mysteryId:null}:null,budgetRound:room.budgetRound||0,budget:roundBudget(room),audienceAwards:!!room.audienceAwards,me:id,
  players:room.players.map(p=>({id:p.id,name:p.name,score:p.score,ready:p.ready,online:p.active&&now-p.seen<25000,voted:!!p.vote&&(!room.audienceAwards||AWARDS.every(a=>p.awardVotes?.[a.id]))})),myBowl:me?.bowl,myReady:me?.ready,myVote:me?.vote,myAwardVotes:me?.awardVotes||{},
- entries:['vote','results','final'].includes(room.phase)?room.players.map(p=>({ballot:p.ballot,bowl:p.bowl,mine:p.id===id,...(reveal?{name:p.name,score:p.score,votes:room.players.filter(v=>v.vote===p.ballot).length,awards:Object.fromEntries(AWARDS.map(a=>[a.id,room.players.filter(v=>v.id!==p.id&&v.awardVotes?.[a.id]===p.ballot).length])) as Record<AwardId,number>}:{})})).sort((a,b)=>a.ballot.localeCompare(b.ballot)):[]};
+ entries:['vote','results','final'].includes(room.phase)?room.players.map(p=>({ballot:p.ballot,bowl:p.bowl,mine:p.id===id,...(reveal?{name:p.name,score:p.score,colorScore:room.mutation?.id==='color'?colorScore(p.bowl,room.mutation.color||'pink'):null,votes:room.players.filter(v=>v.vote===p.ballot).length,awards:Object.fromEntries(AWARDS.map(a=>[a.id,room.players.filter(v=>v.id!==p.id&&v.awardVotes?.[a.id]===p.ballot).length])) as Record<AwardId,number>}:{})})).sort((a,b)=>a.ballot.localeCompare(b.ballot)):[]};
 }
 export type View=ReturnType<typeof publicRoom>;
