@@ -13,12 +13,16 @@ export function ingredientGeometry(id:string){
  }else if(id==='banana'){
   disk(.47,.14,'#ead295');disk(.425,.015,'#fff0b4',.14);ball('#fff6cc',0,.16,0,.18,.013,.18);for(let i=0;i<6;i++){const a=i*Math.PI/3;ball('#b78b46',Math.sin(a)*.14,.177,Math.cos(a)*.14,.018,.006,.03);}
  }else if(id==='kiwi'){
-  disk(.48,.14,'#806338');disk(.44,.018,'#89be3c',.14);disk(.14,.02,'#eff5b8',.159);for(let i=0;i<22;i++){const a=i*2*Math.PI/22;ball('#2b3220',Math.cos(a)*.29,.171,Math.sin(a)*.29,.016,.008,.03);}
+  disk(.48,.085,'#806338');disk(.455,.012,'#70ad32',.085);disk(.415,.009,'#a3d34b',.097);
+  for(let i=0;i<28;i++){const a=i*2*Math.PI/28;const r=.19+(i%2)*.075;ball('#253321',Math.cos(a)*r,.111,Math.sin(a)*r,.012,.004,.023);}
+  ball('#f0f3bc',0,.111,0,.115,.006,.15);
+  for(let i=0;i<24;i++){const a=i*2*Math.PI/24;ball('#c6e873',Math.cos(a)*.34,.108,Math.sin(a)*.34,.018,.003,.055);}
  }else if(id==='strawberry'){
-  const profile=[[0,0],[.1,.035],[.23,.15],[.34,.31],[.4,.49],[.38,.64],[.28,.72],[0,.73]].map(([r,y])=>new T.Vector2(r,y));
-  add(new T.LatheGeometry(profile,36),'#df1f35');
-  for(let i=0;i<48;i++){const y=.09+(i/48)*.61,a=i*2.39996,r=y<.49?.10+(y-.035)*.65:.4-(y-.49)*.4;const x=Math.cos(a)*r,z=Math.sin(a)*r;ball('#a61325',x,y,z,.019,.031,.019);ball('#f3c05d',x*1.012,y+.004,z*1.012,.009,.019,.009);}
-
+  const outline=new T.Shape();outline.moveTo(0,-.48);outline.bezierCurveTo(-.12,-.35,-.46,.03,-.4,.28);outline.bezierCurveTo(-.34,.5,.34,.5,.4,.28);outline.bezierCurveTo(.46,.03,.12,-.35,0,-.48);
+  const skin=new T.ExtrudeGeometry(outline,{depth:.085,bevelEnabled:true,bevelSegments:3,bevelSize:.015,bevelThickness:.012,curveSegments:24});skin.rotateX(-Math.PI/2);add(skin,'#c91f35');
+  const flesh=new T.ShapeGeometry(outline,32);flesh.rotateX(-Math.PI/2);add(flesh,'#f44d59',0,.103,0,.88,1,.88);
+  ball('#ffd4c1',0,.108,.07,.095,.006,.25);
+  for(let i=0;i<14;i++){const a=i*2.39996,r=.16+Math.sqrt(i/14)*.17;const x=Math.cos(a)*r,z=.07+Math.sin(a)*r*.8;ball('#ff9c8b',x*.7,.107,z*.7,.025,.003,.05);ball('#f8d373',x,.113,z,.009,.004,.017);}
  }else if(id==='blueberry'){
   ball('#3c4c86',0,.24,0,.42,.32,.42);for(let i=0;i<5;i++){const a=i*1.256;ball('#24283f',Math.cos(a)*.095,.553,Math.sin(a)*.095,.04,.016,.075);}
  }else if(id==='raspberry'){
@@ -42,5 +46,5 @@ export function ingredientGeometry(id:string){
  }else{
   const chia=id==='chia',cacao=id==='cacao',count=chia?12:cacao?7:22;for(let i=0;i<count;i++){const a=i*2.4,r=.1+Math.sqrt(i/count)*(chia||cacao?.3:.6);const g=chia?new T.SphereGeometry(1,6,4):new T.IcosahedronGeometry(1,0);const size=chia?.065:cacao?.16:.15;add(g,chia?(i%3?'#363245':'#9a9298'):cacao?(i%2?'#563427':'#765246'):(i%2?'#d49b53':'#edc477'),Math.cos(a)*r,.06+(i%4)*.07,Math.sin(a)*r,size,size*.7,size*1.1,i);}
  }
- const combined=mergeGeometries(parts,false)!;parts.forEach(p=>p.dispose());combined.computeBoundingSphere();cache.set(id,combined);return combined;
+ const combined=mergeGeometries(parts,false)!;parts.forEach(p=>p.dispose());combined.computeBoundingBox();combined.translate(0,-combined.boundingBox!.min.y,0);combined.computeBoundingBox();combined.computeBoundingSphere();cache.set(id,combined);return combined;
 }
