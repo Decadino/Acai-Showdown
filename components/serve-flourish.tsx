@@ -1,0 +1,10 @@
+"use client";
+import {Check,Sparkles,BookOpen} from 'lucide-react';
+import {Button} from './ui/button';
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from './ui/dialog';
+import {Bowl} from './bowl';
+import {useSettings} from './settings';
+import {orderProgress,CUSTOMER_PERSONALITIES,ORDERS} from '@/lib/studio';
+import type {Bowl as BowlData} from '@/lib/game';
+export type ServeMoment={id:string;bowl:BowlData;theme:string;order:string|null;gallery:'saved'|'full'|'empty'};
+export function ServeFlourish({moment,onClose}:{moment:ServeMoment|null;onClose:()=>void}){const {preferences}=useSettings();if(!moment)return null;const progress=orderProgress(moment.bowl,moment.order||''),perfect=progress.length>0&&progress.every(Boolean),personality=CUSTOMER_PERSONALITIES[moment.order||''],customer=ORDERS.find(o=>o.id===moment.order);return <Dialog open onOpenChange={open=>{if(!open)onClose()}}><DialogContent className={`serve-dialog ${preferences.motion?'serve-animated':''}`}><div className="serve-heading"><span className="serve-seal"><Check size={25}/></span><p className="eyebrow">FRESH FROM YOUR STUDIO</p><DialogTitle>Ready to serve!</DialogTitle><DialogDescription>{moment.bowl.title||'Your delicious original'} · {moment.theme}</DialogDescription></div><div className="serve-bowl"><Bowl key={moment.id} bowl={moment.bowl} serving spotlight label="Your finished bowl"/></div><div className="serve-details"><span>{moment.bowl.pieces.length} pieces</span><span>{new Set(moment.bowl.pieces.map(p=>p.id)).size} ingredient types</span>{perfect&&<span><Sparkles size={14}/>Perfect order</span>}</div>{personality&&<blockquote><strong>{customer?.customer} says:</strong> “{perfect?personality.success:personality.partial}”</blockquote>}<p className="serve-gallery-status"><BookOpen size={15}/>{moment.gallery==='saved'?'Saved to your bowl gallery.':moment.gallery==='full'?'Your gallery is full. Remove an older bowl to make space.':'Add ingredients next time to save a gallery creation.'}</p><Button className="primary full" onClick={onClose}>Lovely — keep going</Button></DialogContent></Dialog>}

@@ -3,6 +3,7 @@ import "./globals.css";
 import "./fruity.css";
 import "./cafe-polish.css";
 import "./typography.css";
+import "./gallery-serve.css";
 
 export const metadata: Metadata = {
   title: "Açaí Showdown — The Bowl Studio",
