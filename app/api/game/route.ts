@@ -1,3 +1,4 @@
+import {ROUND_MODES,REACTIONS} from '@/lib/engagement';
 import {database} from '@/lib/storage';
 import {saveMutatedBowl,revealMystery,rollMutations,AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
 export const dynamic='force-dynamic';
@@ -16,7 +17,7 @@ async function handle(req:Request){let cookie:string|null=null;try{
   const p=player(id,body.name,now);await db.prepare('DELETE FROM rooms WHERE code IN (SELECT code FROM rooms WHERE expires < ? LIMIT 100)').bind(now).run();
   const count=await db.prepare('SELECT COUNT(*) AS n FROM rooms WHERE owner = ? AND expires > ?').bind(id,now).first<{n:number}>();if((count?.n||0)>=10)return response({error:'You have 10 active rooms. Rejoin one or try again tomorrow.'},429,cookie);
   for(let i=0;i<5;i++){const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const bytes=crypto.getRandomValues(new Uint8Array(6));const code=Array.from(bytes,x=>alphabet[x%alphabet.length]).join('');const themes=THEMES.map(x=>x.id);for(let j=themes.length-1;j>0;j--){const k=crypto.getRandomValues(new Uint32Array(1))[0]%(j+1);[themes[j],themes[k]]=[themes[k],themes[j]];}
-   const room:Room={code,host:id,phase:'lobby',round:0,deadline:0,themes:themes.slice(0,3),players:[p],scored:false,created:now,budgetRound:2,audienceAwards:true};const inserted=await db.prepare('INSERT OR IGNORE INTO rooms (code,owner,data,version,expires) VALUES (?,?,?,0,?)').bind(code,id,JSON.stringify(room),now+43200000).run();if(inserted.meta.changes)return response(publicRoom(room,id,now),200,cookie);
+   const room:Room={matchId:crypto.randomUUID(),roundSeconds:105,modes:['creative','budget','speed'],code,host:id,phase:'lobby',round:0,deadline:0,themes:themes.slice(0,3),players:[p],scored:false,created:now,budgetRound:2,audienceAwards:true};const inserted=await db.prepare('INSERT OR IGNORE INTO rooms (code,owner,data,version,expires) VALUES (?,?,?,0,?)').bind(code,id,JSON.stringify(room),now+43200000).run();if(inserted.meta.changes)return response(publicRoom(room,id,now),200,cookie);
   }throw Error('Could not create a room. Please try again.');
  }
  const code=String(body.code||url.searchParams.get('code')||'').trim().toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code))throw Error('Enter the six-character room code.');
@@ -35,12 +36,12 @@ async function handle(req:Request){let cookie:string|null=null;try{
   changed=advance(room,now)||changed;
   if(action==='start'||action==='next'||action==='rematch'){
    if(room.host!==id)throw Error('Only the host can start a round.');
-   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');room.round=0;room.mutationDeck=rollMutations();room.mutation=null;room.claims={};room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
+   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');room.round=0;room.matchId=crypto.randomUUID();room.mutationDeck=rollMutations();room.mutation=null;room.claims={};room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
    else {if((action==='start'&&room.phase!=='lobby')||(action==='next'&&room.phase!=='results'))throw Error('The room has moved to another stage.');if(room.players.filter(p=>p.active&&now-p.seen<25000).length<2)throw Error('At least two connected players are needed.');startRound(room,now);}changed=true;
    }else if(action==='settings'){
    if(room.host!==id||room.phase!=='lobby')throw Error('Only the host can choose themes in the lobby.');
    if(!Array.isArray(body.themes)||body.themes.length!==3||!body.themes.every((t:unknown)=>Number.isInteger(t)&&THEMES.some(x=>x.id===t)))throw Error('Choose a theme for each round.');
-   room.themes=body.themes;room.budgetRound=2;room.audienceAwards=true;changed=true;
+   if(body.roundSeconds!==undefined){if(![45,60,105].includes(body.roundSeconds))throw Error('Choose 45, 60, or 105 seconds.');room.roundSeconds=body.roundSeconds;}if(body.modes!==undefined){if(!Array.isArray(body.modes)||body.modes.length!==3||!body.modes.every((m:unknown)=>ROUND_MODES.some(v=>v.id===m)))throw Error('Choose a mode for each round.');room.modes=body.modes;}room.themes=body.themes;room.budgetRound=2;room.audienceAwards=true;changed=true;
   }else if(action==='save'||action==='submit'){
    if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');if(action==='submit'&&room.mutation?.id==='gravity'&&body.bowl?.gravity!=='sealed')throw Error('Choose your base last to seal the bowl before finishing.');saveMutatedBowl(room,me,body.bowl);if(action==='submit')me.ready=true;changed=true;
   }else if(action==='mystery'){
@@ -53,6 +54,9 @@ async function handle(req:Request){let cookie:string|null=null;try{
    me.awardVotes??={};if(me.awardVotes[award.id])throw Error('Your award vote is already recorded.');
    const target=room.players.find(p=>p.ballot===body.ballot);if(!target||target.id===id)throw Error('Choose another chef’s bowl.');
    me.awardVotes[award.id]=target.ballot;changed=true;advance(room,now);
+  }else if(action==='react'){
+   if(room.phase!=='vote'||room.round!==body.round)throw Error('Reactions open during the reveal.');
+   if(!REACTIONS.some(r=>r.id===body.kind))throw Error('Choose a reaction.');const target=room.players.find(p=>p.ballot===body.ballot);if(!target||target.id===id)throw Error('React to another chef’s bowl.');room.reactions??=[];if(room.reactions.some(r=>r.from===id&&r.ballot===target.ballot))throw Error('You already reacted to this bowl.');if(now-(me.lastReaction||0)<800)throw Error('Give your reaction a moment.');me.lastReaction=now;room.reactions.push({id:crypto.randomUUID(),from:id,ballot:target.ballot,kind:body.kind,at:now});changed=true;
   }else if(action==='leave'){me.active=false;if(room.phase==='lobby')room.players=room.players.filter(p=>p.id!==id);advance(room,now);changed=true;}
   else if(!['read','join'].includes(action))throw Error('Unknown game action.');
   if(!changed)return response(publicRoom(room,id,now),200,cookie);

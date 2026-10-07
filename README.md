@@ -74,3 +74,8 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 ## Future options
 
 For a larger public launch, add infrastructure rate limiting and load testing. This release is built for small private friend groups sharing room codes, not tournament-scale matchmaking.
+
+## Party features
+Hosts choose 45/60/105-second timers and a mode for each round: Creative studio, 60-coin Budget battle, 45-second Quick serve, or Mirror menu. Mirror menu disables mutations and awards +2 for at least 75% similarity. Private server-assigned goals earn +1. A halfway Signature serve surprise earns +1 for a bowl title of at least three trimmed characters. Server scoring runs once per round.
+
+Reveal reactions are shared, limited to one per other player bowl, and do not award points. The collection unlocks cosmetic bowl finishes after 1, 3, 5, and 10 completed multiplayer games; completion and selection are saved in localStorage on the player device. Rematches have distinct IDs, so refreshing results cannot double-count completion. All ingredients remain available.
