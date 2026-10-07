@@ -3,11 +3,17 @@ import {useEffect,useRef} from 'react';
 import {useSettings} from './settings';
 import {roundPoints,type View} from '@/lib/game';
 let audio:AudioContext|null=null;
-export function unlockGameAudio(){if(document.documentElement.dataset.sound!=='on')return;try{audio??=new AudioContext();if(audio.state==='suspended')void audio.resume().catch(()=>{});}catch{}}
-export function gameSound(kind:'drop'|'drizzle'|'slice'|'vote'|'tick'|'win'|'start'){
- if(document.documentElement.dataset.sound!=='on'||document.hidden||!audio||audio.state!=='running')return;
- const notes=kind==='win'?[523,659,784,1047]:kind==='start'?[392,523]:kind==='vote'?[660,880]:[kind==='tick'?440:kind==='drizzle'?700:kind==='slice'?950:320];
- notes.forEach((frequency,i)=>{const osc=audio!.createOscillator(),gain=audio!.createGain(),at=audio!.currentTime+i*.095;osc.type=kind==='drop'?'sine':'triangle';osc.frequency.setValueAtTime(frequency,at);if(kind==='drop'||kind==='drizzle')osc.frequency.exponentialRampToValueAtTime(frequency*.55,at+.13);gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.045,at+.012);gain.gain.exponentialRampToValueAtTime(.0001,at+.2);osc.connect(gain);gain.connect(audio!.destination);osc.start(at);osc.stop(at+.22);osc.onended=()=>{osc.disconnect();gain.disconnect();};});
+export function unlockGameAudio(){if(document.documentElement.dataset.sound!=='on')return;try{if(!audio||audio.state==='closed')audio=new AudioContext();if(audio.state!=='running')void audio.resume().catch(()=>{});}catch{}}
+export function gameSound(kind:'drop'|'drizzle'|'slice'|'vote'|'tick'|'win'|'start'|'ready'){
+ if(document.documentElement.dataset.sound!=='on'||document.hidden)return;
+ unlockGameAudio();const context=audio;if(!context)return;
+ const play=()=>{
+  if(document.documentElement.dataset.sound!=='on'||document.hidden||context.state!=='running')return;
+  const notes=kind==='ready'?[523,659,784]:kind==='win'?[523,659,784,1047]:kind==='start'?[392,523]:kind==='vote'?[660,880]:[kind==='tick'?440:kind==='drizzle'?700:kind==='slice'?950:320];
+  notes.forEach((frequency,i)=>{const osc=context.createOscillator(),gain=context.createGain(),at=context.currentTime+i*(kind==='ready'?.12:.095),duration=kind==='ready'?.32:.2;osc.type=kind==='drop'?'sine':'triangle';osc.frequency.setValueAtTime(frequency,at);if(kind==='drop'||kind==='drizzle')osc.frequency.exponentialRampToValueAtTime(frequency*.55,at+.13);gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(kind==='ready'?.065:.045,at+.012);gain.gain.exponentialRampToValueAtTime(.0001,at+duration);osc.connect(gain);gain.connect(context.destination);osc.start(at);osc.stop(at+duration+.02);osc.onended=()=>{osc.disconnect();gain.disconnect();};});
+ };
+ // A first click can arrive while the browser is still resuming audio.
+ if(context.state==='running')play();else void context.resume().then(play).catch(()=>{});
 }
 export function GameAudio({room,seconds,practice}:{room:View|null;seconds:number;practice:boolean}){
  const waiting=room?.phase==='build'&&room.serverNow<room.startedAt;
