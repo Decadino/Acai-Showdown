@@ -1,2 +1,4 @@
-import {sqliteTable,text,integer,index} from 'drizzle-orm/sqlite-core';
+import {sqliteTable,text,integer,index,primaryKey} from 'drizzle-orm/sqlite-core';
 export const rooms=sqliteTable('rooms',{code:text('code').primaryKey(),owner:text('owner').notNull(),data:text('data').notNull(),version:integer('version').notNull().default(0),expires:integer('expires').notNull()},t=>[index('rooms_owner').on(t.owner),index('rooms_expires').on(t.expires)]);
+
+export const matchResults=sqliteTable('match_results',{matchId:text('match_id').notNull(),playerId:text('player_id').notNull(),name:text('name').notNull(),won:integer('won').notNull(),score:integer('score').notNull(),completedAt:integer('completed_at').notNull()},t=>[primaryKey({columns:[t.matchId,t.playerId]}),index('results_player_completed').on(t.playerId,t.completedAt)]);

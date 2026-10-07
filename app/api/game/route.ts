@@ -3,7 +3,7 @@ import {database} from '@/lib/storage';
 import {saveMutatedBowl,revealMystery,rollMutations,AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store','Content-Type':'application/json'};
-async function identity(req:Request){let token=req.headers.get('cookie')?.match(/(?:^|;\s*)acai_session=([a-f0-9]{64})(?:;|$)/)?.[1];const fresh=!token;if(!token)token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));const id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return {id,cookie:fresh?`acai_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${new URL(req.url).protocol==='https:'?'; Secure':''}`:null};}
+async function identity(req:Request){let token=req.headers.get('cookie')?.match(/(?:^|;\s*)acai_session=([a-f0-9]{64})(?:;|$)/)?.[1];if(!token)token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));const id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return {id,cookie:`acai_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${new URL(req.url).protocol==='https:'?'; Secure':''}`};}
 function response(data:unknown,status=200,cookie:string|null=null){return new Response(JSON.stringify(data),{status,headers:{...headers,...(cookie?{'Set-Cookie':cookie}:{})}})}
 function player(id:string,name:unknown,now:number):Player{if(typeof name!=='string'||!name.trim()||name.trim().length>20)throw Error('Enter a chef name of 1–20 characters.');return {id,name:name.trim(),joined:now,seen:now,active:true,score:0,ready:false,bowl:blankBowl(),ballot:crypto.randomUUID(),vote:null};}
 async function handle(req:Request){let cookie:string|null=null;try{
@@ -11,6 +11,7 @@ async function handle(req:Request){let cookie:string|null=null;try{
  if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==url.origin)return response({error:'Please open the game directly and try again.'},403,cookie);if(Number(req.headers.get('content-length')||0)>48000)return response({error:'That bowl has too much data.'},413,cookie);}
  const raw=req.method==='POST'?await req.text():'';if(raw.length>48000)return response({error:'That bowl has too much data.'},413,cookie);
  const body=req.method==='POST'?JSON.parse(raw):{};const action=req.method==='GET'?'read':body.action;
+ if(req.method==='GET'&&url.searchParams.get('leaderboard')==='1'){const db=database();const board=await db.prepare(`WITH totals AS (SELECT player_id,SUM(won) wins,COUNT(*) games FROM match_results GROUP BY player_id), ranked AS (SELECT *,RANK() OVER (ORDER BY wins DESC) rank,ROW_NUMBER() OVER (ORDER BY wins DESC,games ASC,player_id) position FROM totals) SELECT rank,position,wins,games,(SELECT name FROM match_results m WHERE m.player_id=r.player_id ORDER BY completed_at DESC,match_id DESC LIMIT 1) name,CASE WHEN player_id=? THEN 1 ELSE 0 END mine FROM ranked r WHERE position<=50 OR player_id=? ORDER BY position`).bind(id,id).all();return response({entries:board.results},200,cookie);}
  if(req.method==='GET'&&!url.searchParams.get('code'))return response({ok:true},200,cookie);
  const db=database();
  if(action==='create'){
@@ -36,7 +37,7 @@ async function handle(req:Request){let cookie:string|null=null;try{
   changed=advance(room,now)||changed;
   if(action==='start'||action==='next'||action==='rematch'){
    if(room.host!==id)throw Error('Only the host can start a round.');
-   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');room.round=0;room.matchId=crypto.randomUUID();room.mutationDeck=rollMutations();room.mutation=null;room.claims={};room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
+   if(action==='rematch'){if(room.phase!=='final')throw Error('Finish this game first.');await recordMatch(db,room,now);room.round=0;room.matchId=crypto.randomUUID();room.mutationDeck=rollMutations();room.mutation=null;room.claims={};room.players=room.players.filter(p=>p.active&&now-p.seen<45000);for(const p of room.players)p.score=0;room.themes=THEMES.map(t=>t.id).sort(()=>Math.random()-.5).slice(0,3);room.phase='lobby';}
    else {if((action==='start'&&room.phase!=='lobby')||(action==='next'&&room.phase!=='results'))throw Error('The room has moved to another stage.');if(room.players.filter(p=>p.active&&now-p.seen<25000).length<2)throw Error('At least two connected players are needed.');startRound(room,now);}changed=true;
    }else if(action==='settings'){
    if(room.host!==id||room.phase!=='lobby')throw Error('Only the host can choose themes in the lobby.');
@@ -59,9 +60,16 @@ async function handle(req:Request){let cookie:string|null=null;try{
    if(!REACTIONS.some(r=>r.id===body.kind))throw Error('Choose a reaction.');const target=room.players.find(p=>p.ballot===body.ballot);if(!target||target.id===id)throw Error('React to another chef’s bowl.');room.reactions??=[];if(room.reactions.some(r=>r.from===id&&r.ballot===target.ballot))throw Error('You already reacted to this bowl.');if(now-(me.lastReaction||0)<800)throw Error('Give your reaction a moment.');me.lastReaction=now;room.reactions.push({id:crypto.randomUUID(),from:id,ballot:target.ballot,kind:body.kind,at:now});changed=true;
   }else if(action==='leave'){me.active=false;if(room.phase==='lobby')room.players=room.players.filter(p=>p.id!==id);advance(room,now);changed=true;}
   else if(!['read','join'].includes(action))throw Error('Unknown game action.');
-  if(!changed)return response(publicRoom(room,id,now),200,cookie);
-  const result=await db.prepare('UPDATE rooms SET data = ?, version = version + 1 WHERE code = ? AND version = ?').bind(JSON.stringify(room),code,row.version).run();if(result.meta.changes)return response(action==='leave'?{ok:true}:publicRoom(room,id,now),200,cookie);
+  if(!changed){if(room.phase==='final')await recordMatch(db,room,now);return response(publicRoom(room,id,now),200,cookie);}
+  const result=await db.prepare('UPDATE rooms SET data = ?, version = version + 1 WHERE code = ? AND version = ?').bind(JSON.stringify(room),code,row.version).run();if(result.meta.changes){if(room.phase==='final')await recordMatch(db,room,now);return response(action==='leave'?{ok:true}:publicRoom(room,id,now),200,cookie);}
  }
  return response({error:'The room is busy. Please try once more.'},409,cookie);
  }catch(e){const message=e instanceof Error?e.message:'Could not connect to the game.';if(/D1|SQLITE|binding|database/i.test(message)){console.error('Game storage error',message);return response({error:'The game service is temporarily unavailable. Your bowl is still on this screen.'},503,cookie);}return response({error:message},400,cookie);}}
 export const GET=handle;export const POST=handle;
+
+// The composite key makes polling, retries, and concurrent final requests count each match once.
+async function recordMatch(db:ReturnType<typeof database>,room:Room,now:number){
+ if(room.round<3||room.players.length<2||!room.scored)return;
+ const match=room.matchId||`${room.code}-${room.created}`;const best=Math.max(...room.players.map(p=>p.score));
+ await db.batch(room.players.map(p=>db.prepare('INSERT OR IGNORE INTO match_results (match_id,player_id,name,won,score,completed_at) VALUES (?,?,?,?,?,?)').bind(match,p.id,p.name,p.score===best?1:0,p.score,now)));
+}
