@@ -28,7 +28,7 @@ export default function Bowl3D(props:BowlProps){
   const scene=new T.Scene(),camera=new T.PerspectiveCamera(37,1,.1,40);camera.position.set(0,6.2,5.1);
   const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.23,0);controls.enablePan=false;controls.enableDamping=false;controls.minDistance=5;controls.maxDistance=10;controls.minPolarAngle=.04;controls.maxPolarAngle=1.25;controls.enabled=!latest.current.onPlace&&!latest.current.onSelect;
   scene.add(new T.HemisphereLight('#fff4e9','#aaa0c7',1.9));const key=new T.DirectionalLight('#fff8ed',2.5);key.position.set(-2,8,3);key.castShadow=renderer.shadowMap.enabled;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-3;key.shadow.camera.right=3;key.shadow.camera.top=3;key.shadow.camera.bottom=-3;key.shadow.bias=-.001;key.shadow.normalBias=.012;key.shadow.radius=4;scene.add(key);
-  const fill=new T.DirectionalLight('#d5d5ff',1.7);fill.position.set(4,3,-3);scene.add(fill);
+  const fill=new T.DirectionalLight('#d5d5ff',1.7);fill.position.set(4,3,-3);scene.add(fill);if(latest.current.spotlight){const spotlight=new T.SpotLight('#fff3df',12,15,.55,.8,1);spotlight.position.set(0,7,2);spotlight.target.position.set(0,.5,0);scene.add(spotlight,spotlight.target);}
   const materials:T.Material[]=[],ownedGeometries:T.BufferGeometry[]=[];
   const mat=(opts:T.MeshPhysicalMaterialParameters)=>{const m=new T.MeshPhysicalMaterial(opts);materials.push(m);return m;};
   const ceramic=mat({color:'#fdf8f3',roughness:.22,clearcoat:.8,clearcoatRoughness:.2,side:T.DoubleSide});
@@ -62,7 +62,7 @@ export default function Bowl3D(props:BowlProps){
     if(t>=1){mesh.position.y=d.y;mesh.scale.setScalar(d.scale);if(d.sauce)mesh.geometry.setDrawRange(0,Infinity);drops.delete(id);}}
 
 
-   if(baseLanding){const t=Math.min(1,(now-baseLanding)/550);base.position.y=.94+.7*Math.pow(1-t,2);if(t>=1)baseLanding=0;}if(latest.current.autoOrbit&&!motionReduced()&&document.documentElement.dataset.motion!=='reduced'){controls.autoRotate=true;controls.autoRotateSpeed=1.5;controls.update();}else controls.autoRotate=false;renderer.render(scene,camera);renderer.domElement.dataset.drawCalls=String(renderer.info.render.calls);renderer.domElement.dataset.activePlacements=String(drops.size);inFrame=false;if(drops.size||baseLanding||latest.current.autoOrbit&&!motionReduced()&&document.documentElement.dataset.motion!=='reduced')raf=requestAnimationFrame(frame);
+   if(baseLanding){const t=Math.min(1,(now-baseLanding)/550);base.position.y=.94+.7*Math.pow(1-t,2);if(t>=1)baseLanding=0;}if(latest.current.autoOrbit&&!motionReduced()&&document.documentElement.dataset.motion!=='reduced'){controls.autoRotate=true;controls.autoRotateSpeed=latest.current.spotlight?.65:1.5;controls.update();}else controls.autoRotate=false;renderer.render(scene,camera);renderer.domElement.dataset.drawCalls=String(renderer.info.render.calls);renderer.domElement.dataset.activePlacements=String(drops.size);inFrame=false;if(drops.size||baseLanding||latest.current.autoOrbit&&!motionReduced()&&document.documentElement.dataset.motion!=='reduced')raf=requestAnimationFrame(frame);
   }
   const render=()=>{if(!inFrame&&!raf&&!disposed&&visible)raf=requestAnimationFrame(frame);};
   controls.addEventListener('change',render);

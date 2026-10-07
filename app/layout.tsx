@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./fruity.css";
+import "./cafe-polish.css";
 
 export const metadata: Metadata = {
   title: "Açaí Showdown — The Bowl Studio",
