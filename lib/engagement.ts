@@ -6,4 +6,10 @@ export function goalProgress(b:Bowl,id:string){const n=id==='duo'?new Set(b.piec
 export function referenceBowl(seed:number):Bowl{const fruit=['strawberry','banana','kiwi','mango'][seed%4];const pieces:Piece[]=Array.from({length:6},(_,i)=>({id:fruit,x:50+25*Math.cos(i*Math.PI/3),y:50+25*Math.sin(i*Math.PI/3),rotation:i*60,size:15}));pieces.push({id:'blueberry',x:44,y:48,rotation:0,size:12},{id:'blueberry',x:56,y:48,rotation:0,size:12},{id:'flower',x:50,y:60,rotation:0,size:12});return {base:['classic','pitaya','blue'][seed%3],title:'The mirror menu',pieces};}
 export function similarity(b:Bowl,reference:Bowl){const available=[...b.pieces];let sum=b.base===reference.base?1:0;for(const p of reference.pieces){let best=-1,d=Infinity;available.forEach((q,i)=>{if(q.id===p.id){const distance=Math.hypot(q.x-p.x,q.y-p.y)+Math.abs(q.size-p.size)*.5;if(distance<d){d=distance;best=i;}}});if(best>=0){sum+=Math.max(0,1-d/24);available.splice(best,1);}}return Math.max(0,Math.round(100*sum/(reference.pieces.length+1)-Math.max(0,b.pieces.length-reference.pieces.length)*2));}
 export const REACTIONS=[{id:'heart',emoji:'💜',name:'Love it'},{id:'sparkle',emoji:'✨',name:'So creative'},{id:'yum',emoji:'😋',name:'Would order'},{id:'fire',emoji:'🔥',name:'On fire'}] as const;
-export const COSMETICS=[{id:'porcelain',name:'Porcelain',games:0,color:'#fdf8f3'},{id:'mint',name:'Mint club',games:1,color:'#b2f1dc'},{id:'rose',name:'Berry blush',games:3,color:'#f4aacb'},{id:'midnight',name:'Midnight chef',games:5,color:'#33305d'},{id:'gold',name:'Golden legend',games:10,color:'#efc466'}] as const;
+export const COSMETICS=[
+ {id:'porcelain',name:'Mochi bloom',games:0,color:'#fff3df',rim:'#fff8ed',textureRow:0,description:'Cream glaze · tiny pink blossoms'},
+ {id:'mint',name:'Matcha petals',games:1,color:'#a8c980',rim:'#f5efdc',textureRow:1,description:'Tea green · ivory petals'},
+ {id:'rose',name:'Sakura milk',games:3,color:'#f4b4b2',rim:'#ffe8db',textureRow:2,description:'Blush pink · cherry blossoms'},
+ {id:'midnight',name:'Moonlit waves',games:5,color:'#315675',rim:'#f3d699',textureRow:3,description:'Indigo glaze · golden waves'},
+ {id:'gold',name:'Honey hanami',games:10,color:'#edc66c',rim:'#fff1c9',textureRow:4,description:'Honey gold · cream blossoms'}
+] as const;
