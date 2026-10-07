@@ -23,6 +23,13 @@ export function placePieces(id:string,x:number,y:number,mode:string,size:number)
  else {for(let i=0;i<5;i++){const a=i*2.4;add(x+Math.cos(a)*(5+i*1.7),y+Math.sin(a)*(5+i*1.7),i*63);}}
  return out;
 }
-export const sampleBowl:BowlData={base:'classic',title:'The violet hour',pieces:[...placePieces('banana',27,37,'arc',19),...placePieces('strawberry',71,35,'arc',18),...placePieces('blueberry',62,72,'row',13),...placePieces('granola',33,60,'scatter',12),...placePieces('coconut',52,47,'scatter',8),{id:'honey',x:51,y:51,size:38,rotation:20},{id:'flower',x:45,y:70,size:13,rotation:-10}]};
-
-sampleBowl.pieces=sampleBowl.pieces.map((p,i)=>({...p,rotation:(i*23)%60-30}));
+// A deliberately plated hero bowl: small fruit fans, a compact crunch section, and breathing room.
+export const sampleBowl:BowlData={base:'classic',title:'The violet hour',pieces:[
+ ...[{x:70,y:38},{x:70,y:47},{x:66,y:56}].map((p,i)=>({id:'banana',...p,size:15,rotation:-15+i*12})),
+ ...[{x:33,y:62},{x:42,y:66},{x:51,y:66}].map((p,i)=>({id:'strawberry',...p,size:13,rotation:-35+i*25})),
+ ...[{x:34,y:32},{x:42,y:30},{x:50,y:31}].map(p=>({id:'blueberry',...p,size:9,rotation:0})),
+ ...[{x:29,y:43},{x:28,y:51},{x:34,y:53}].map((p,i)=>({id:'granola',...p,size:7,rotation:i*40})),
+ {id:'coconut',x:32,y:45,size:6,rotation:20},
+ {id:'flower',x:61,y:65,size:7,rotation:-12},
+ {id:'honey',x:50,y:50,size:23,rotation:0,path:Array.from({length:32},(_,i)=>({x:50+7*Math.sin(i/31*Math.PI*5),y:39+i/31*21}))}
+]};
