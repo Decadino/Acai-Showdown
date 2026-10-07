@@ -12,9 +12,11 @@ import {ingredientGeometry} from './food-geometry';
 import {drizzleGeometry} from './drizzle-geometry';
 import {BASES,INGREDIENTS,type Bowl as BowlData} from '@/lib/game';
 import type {BowlProps} from './bowl';
+type Drop={elapsed:number;last:number;delay:number;y:number;scale:number;sauce:boolean};
 type Runtime={update:(bowl:BowlData,selected:number,animate:boolean)=>void;view:(rotate:boolean)=>void;reset:()=>void;zoom:(delta:number)=>void;dispose:()=>void};
 export default function Bowl3D(props:BowlProps){
  const {preferences}=useSettings();
+ const activeDrops=useRef(new Map<string,Drop>());
  const host=useRef<HTMLDivElement>(null),runtime=useRef<Runtime|null>(null),latest=useRef(props),rotateRef=useRef(false);latest.current=props;
  const [rotate,setRotate]=useState(false),[failed,setFailed]=useState(false),[ready,setReady]=useState(false);
  const interactive=!!(props.onPlace||props.onSelect),sealed=props.bowl.gravity==='sealed';
@@ -41,17 +43,22 @@ export default function Bowl3D(props:BowlProps){
   const lustreMat=mat({vertexColors:true,roughness:.15,clearcoat:1,metalness:.18});const foodMat=mat({vertexColors:true,roughness:.42,clearcoat:.25,clearcoatRoughness:.4});const food=new T.Group();scene.add(food);const contacts=new Map<string,T.Mesh>();const contactGeo=new T.CircleGeometry(1,20);ownedGeometries.push(contactGeo);const contactMat=new T.MeshBasicMaterial({color:'#29101e',transparent:true,opacity:.12,depthWrite:false});materials.push(contactMat);const contactGroup=new T.Group();contactGroup.visible=!low;scene.add(contactGroup);const nodes=new Map<string,T.Mesh>();
   const ringGeo=new T.TorusGeometry(.55,.015,6,40);ownedGeometries.push(ringGeo);const ringMat=new T.MeshBasicMaterial({color:'#caff96',depthTest:false});materials.push(ringMat);const ring=new T.Mesh(ringGeo,ringMat);ring.rotation.x=-Math.PI/2;ring.visible=false;ring.renderOrder=9;scene.add(ring);
   const patternCanvas=document.createElement('canvas');patternCanvas.width=512;patternCanvas.height=256;const pc=patternCanvas.getContext('2d')!;pc.fillStyle='#fff8ea';pc.fillRect(0,0,512,256);for(let x=0;x<512;x+=32)for(let y=0;y<256;y+=32){pc.fillStyle=(x+y)%64===0?'#a785d2':'#e4c776';pc.beginPath();pc.arc(x+16,y+16,9,0,Math.PI*2);pc.fill();}const mosaic=new T.CanvasTexture(patternCanvas);
-  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let inFrame=false;let raf=0,visible=true,disposed=false,first=true,selected=-1,sealedBefore=false,baseLanding=0;const drops=new Map<string,{elapsed:number;last:number;delay:number;y:number;scale:number;sauce:boolean}>();
-  function frame(){if(document.documentElement.dataset.motion==='reduced'&&drops.size){for(const [id,d] of drops){const mesh=nodes.get(id);if(mesh){mesh.position.y=d.y;mesh.scale.setScalar(d.scale);if(d.sauce)mesh.geometry.setDrawRange(0,Infinity);}}drops.clear();}raf=0;if(disposed||!visible)return;inFrame=true;const now=performance.now();for(const [id,d] of drops){const mesh=nodes.get(id);if(!mesh){drops.delete(id);continue;}// Advance only by visible frame time: shader warm-up or a stalled frame cannot skip the drop.
-    if(d.last)d.elapsed+=Math.min(34,Math.max(0,now-d.last));d.last=now;
-    const t=T.MathUtils.clamp((d.elapsed-d.delay)/(reduced?260:d.sauce?1200:650),0,1);
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;let inFrame=false;let raf=0,visible=true,disposed=false,first=true,selected=-1,sealedBefore=false,baseLanding=0;const drops=activeDrops.current;for(const d of drops.values())d.last=0;
+
+  const applyDrop=(mesh:T.Mesh,d:Drop)=>{
+    const t=T.MathUtils.clamp((d.elapsed-d.delay)/(reduced?260:d.sauce?1350:900),0,1);
     const fallProgress=Math.min(1,t/.78),ease=fallProgress*fallProgress*(3-2*fallProgress);
-    const settle=!reduced&&t>.78?Math.sin((t-.78)/.22*Math.PI)*.018:0;
-    mesh.position.y=d.y+(d.sauce||reduced?0:(1-ease)*.85-settle);
+    const settle=!reduced&&t>.78?Math.sin((t-.78)/.22*Math.PI)*.028:0;
+    mesh.position.y=d.y+(d.sauce||reduced?0:(1-ease)*1.3-settle);
     const appear=reduced?.88+.12*(t*t*(3-2*t)):1;
     mesh.scale.setScalar(d.scale*appear);
     if(!d.sauce&&!reduced){mesh.scale.y=d.scale*(1-settle*1.6);mesh.scale.x=d.scale*(1+settle*.6);mesh.scale.z=d.scale*(1+settle*.6);}
     if(d.sauce){const count=mesh.geometry.index?.count??mesh.geometry.getAttribute('position').count;mesh.geometry.setDrawRange(0,Math.min(count,Math.floor(count*(t*t*(3-2*t))/48)*48));}
+    return t;
+  };
+  function frame(){if(document.documentElement.dataset.motion==='reduced'&&drops.size){for(const [id,d] of drops){const mesh=nodes.get(id);if(mesh){mesh.position.y=d.y;mesh.scale.setScalar(d.scale);if(d.sauce)mesh.geometry.setDrawRange(0,Infinity);}}drops.clear();}raf=0;if(disposed||!visible)return;inFrame=true;const now=performance.now();for(const [id,d] of drops){const mesh=nodes.get(id);if(!mesh){drops.delete(id);continue;}// Advance only by visible frame time: shader warm-up or a stalled frame cannot skip the drop.
+    if(d.last)d.elapsed+=Math.min(34,Math.max(0,now-d.last));d.last=now;
+    const t=applyDrop(mesh,d);
     if(t>=1){mesh.position.y=d.y;mesh.scale.setScalar(d.scale);if(d.sauce)mesh.geometry.setDrawRange(0,Infinity);drops.delete(id);}}
 
 
@@ -84,7 +91,7 @@ export default function Bowl3D(props:BowlProps){
     if(!sauce){const surfaceY=y;let overlap=0;for(let j=0;j<i;j++){const prev=bowl.pieces[j];if(INGREDIENTS.find(v=>v.id===prev.id)?.category==='Drizzle')continue;const radius=(prev.size+p.size)*.048*.3,d=Math.hypot(prev.x-p.x,prev.y-p.y)*.048;if(d<radius)overlap=Math.max(overlap,.045*(1-d/radius));}y=surfaceY+overlap;}
 
     if(!sauce&&!low){let contact=contacts.get(uid);if(!contact){contact=new T.Mesh(contactGeo,contactMat);contact.rotation.x=-Math.PI/2;contactGroup.add(contact);contacts.set(uid,contact);}contact.position.set(px,.46+.14*Math.sqrt(Math.max(0,1-(px*px+pz*pz)/3.276))+.003,pz);contact.scale.set(scale*.38,scale*.30,1);}if(sauce)y=.61;else highest=Math.max(highest,y+scale*.28);let mesh=nodes.get(uid),fresh=false;if(!mesh){mesh=new T.Mesh(ingredientGeometry(p.id),foodMat);mesh.castShadow=true;mesh.receiveShadow=true;food.add(mesh);nodes.set(uid,mesh);fresh=true;}else if(mesh.userData.ingredient!==p.id)mesh.geometry=ingredientGeometry(p.id);if(mesh.userData.customGeometry){mesh.geometry.dispose();mesh.geometry=ingredientGeometry(p.id);}
-    if(sauce){const toppings=bowl.pieces.slice(0,i).filter(t=>INGREDIENTS.find(v=>v.id===t.id)?.category!=='Drizzle');const heights=toppings.map(t=>{const n=bowl.pieces.indexOf(t);return nodes.get(t.uid||String(n)+t.id)?.userData.restY??.61;});mesh.geometry=drizzleGeometry(p,toppings,heights,i-toppings.length);y=.61;}mesh.material=sauce&&bowl.effect==='lustre'?lustreMat:foodMat;mesh.userData={index:i,ingredient:p.id,customGeometry:!!sauce,restY:y};mesh.position.set(sauce?0:(p.x-50)*.048,y,sauce?0:(p.y-50)*.048);mesh.rotation.y=-p.rotation*Math.PI/180;mesh.scale.setScalar(scale);if(fresh&&animate&&!first){drops.set(uid,{elapsed:0,last:0,delay:reduced?0:i%5*45,y,scale,sauce});if(sauce)mesh.geometry.setDrawRange(0,0);else mesh.position.y=y+(reduced?0:.85);}else if(drops.has(uid)){const d=drops.get(uid)!;d.y=y;d.scale=scale;}});
+    if(sauce){const toppings=bowl.pieces.slice(0,i).filter(t=>INGREDIENTS.find(v=>v.id===t.id)?.category!=='Drizzle');const heights=toppings.map(t=>{const n=bowl.pieces.indexOf(t);return nodes.get(t.uid||String(n)+t.id)?.userData.restY??.61;});mesh.geometry=drizzleGeometry(p,toppings,heights,i-toppings.length);y=.61;}mesh.material=sauce&&bowl.effect==='lustre'?lustreMat:foodMat;mesh.userData={index:i,ingredient:p.id,customGeometry:!!sauce,restY:y};mesh.position.set(sauce?0:(p.x-50)*.048,y,sauce?0:(p.y-50)*.048);mesh.rotation.y=-p.rotation*Math.PI/180;mesh.scale.setScalar(scale);if(fresh&&animate&&!first){drops.set(uid,{elapsed:0,last:0,delay:reduced?0:i%5*45,y,scale,sauce});if(sauce)mesh.geometry.setDrawRange(0,0);else mesh.position.y=y+(reduced?0:1.3);}else if(drops.has(uid)){const d=drops.get(uid)!;d.y=y;d.scale=scale;applyDrop(mesh,d);}});
    for(const [id,mesh] of nodes)if(!wanted.has(id)){food.remove(mesh);if(mesh.userData.customGeometry)mesh.geometry.dispose();nodes.delete(id);drops.delete(id);const contact=contacts.get(id);if(contact){contactGroup.remove(contact);contacts.delete(id);}}food.visible=true;selected=index;ring.visible=index>=0&&index<bowl.pieces.length&&!sealed;if(ring.visible){const p=bowl.pieces[index],mesh=nodes.get(p.uid||String(index)+p.id)!;ring.position.copy(mesh.position);ring.position.y+=p.size*.048*.3;ring.scale.setScalar(p.size*.048);}
    if(sealed&&!sealedBefore&&animate&&!reduced){baseLanding=performance.now();}sealedBefore=sealed;first=false;render();
   };
