@@ -72,11 +72,9 @@ button[data-slot=button]{height:auto;white-space:normal}input[data-slot=input]{h
 [data-theme="dark"] .champion-columns{background:#30223e;color:var(--muted)}[data-theme="dark"] :is(.base-picker,.tabs,.collection-tabs) button[aria-pressed="true"],[data-theme="dark"] .ingredient-tile[aria-pressed="true"],[data-theme="dark"] .ingredient-tile:has(.fantasy-food-icon)[aria-pressed="true"]{background:#49325f;color:#ecd8ff;border-color:#9a6cc3}
 [data-theme="dark"] :is(.theme-select,.theme-card,.mutation-practice) [data-slot="select-trigger"]{background:var(--surface);color:var(--ink)}[data-theme="dark"] .entry-card.own{background:#332440}[data-theme="dark"] .organized-help{background:var(--surface)}
 
-/* Give the solo studio action real button padding in both palettes. */
-button.practice-link{display:inline-flex;min-height:48px;height:auto;max-width:100%;padding:12px 18px;border:1px solid #d8c6ed;border-radius:14px;background:#f0e8fa;color:#61349b;font-size:14px;line-height:1.5;text-align:center;white-space:normal}
-button.practice-link:hover:not(:disabled){background:#e8daf7;border-color:#b48bd9}
-[data-theme="dark"] button.practice-link{background:#39274b;border-color:#74518e;color:#e1c4ff;padding:12px 18px}
-[data-theme="dark"] button.practice-link:hover:not(:disabled){background:#48305f;border-color:#a375cc}
+/* Solo practice is a text action in both palettes. */
+button.practice-link,[data-theme="dark"] button.practice-link{display:inline-flex;min-height:44px;height:auto;max-width:100%;padding:8px 0;border:0;border-radius:6px;background:transparent;box-shadow:none;color:var(--purple);font-size:14px;line-height:1.5;text-align:left;white-space:normal}
+button.practice-link:hover:not(:disabled),[data-theme="dark"] button.practice-link:hover:not(:disabled){background:transparent;border:0;box-shadow:none;text-decoration:underline;text-underline-offset:4px}
 /* Text actions stay comfortably padded when the global dark button color applies. */
 .app-header .header-actions button.text-button{max-width:none;min-height:44px;padding:10px 14px;font-size:14px;line-height:1.4;white-space:nowrap}
 [data-theme="dark"] button.text-button{background:transparent;color:#dec5fa;border-color:transparent}
