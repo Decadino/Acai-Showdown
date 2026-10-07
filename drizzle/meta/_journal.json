@@ -15,6 +15,13 @@
       "when": 1791344359913,
       "tag": "0001_fluffy_mac_gargan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791345284510,
+      "tag": "0002_yummy_lethal_legion",
+      "breakpoints": true
     }
   ]
 }

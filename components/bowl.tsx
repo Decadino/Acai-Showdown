@@ -5,4 +5,4 @@ import {Bowl2D} from './bowl-2d';
 const Bowl3D=lazy(()=>import('./bowl-3d'));
 export {IngredientImage,placePieces,sampleBowl} from './bowl-2d';
 export type BowlProps=ComponentProps<typeof Bowl2D>;
-export function Bowl(props:BowlProps){return <div className={`bowl-finish finish-${props.bowl.finish||'porcelain'}`}>{<Suspense fallback={<div className="bowl-art bowl-loading"><span>Opening the 3D studio…</span></div>}><Bowl3D {...props}/></Suspense>}</div>}
+export function Bowl(props:BowlProps){return <div className={`bowl-finish finish-${props.bowl.finish||'porcelain'} counter-${props.bowl.countertop||'studio'}`}>{<Suspense fallback={<div className="bowl-art bowl-loading"><span>Opening the 3D studio…</span></div>}><Bowl3D {...props}/></Suspense>}</div>}

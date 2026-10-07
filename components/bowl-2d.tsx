@@ -4,7 +4,7 @@ import {useId,useRef,useState,type KeyboardEvent} from 'react';
 import {INGREDIENTS,type Bowl as BowlData,type Piece} from '@/lib/game';
 export function IngredientImage({index}:{index:number}){return <span className="ingredient-image" aria-hidden="true" style={{backgroundImage:'url(/images/ingredients-atlas.png)',backgroundPosition:`${(index%4)*100/3}% ${Math.floor(index/4)*100/3}%`}}/>}
 const sauces:Record<string,string>={honey:'#e7a934',cocoa:'#502718',peanut:'#bf844b',vanilla:'#fff7e6'};
-export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePlacements=false,label='A decorated açaí bowl',small=false}:{bowl:BowlData;interactionKey?:string;onPlace?:(x:number,y:number)=>void;onSelect?:(index:number)=>void;onMove?:(index:number,x:number,y:number)=>void;selectedIndex?:number;animatePlacements?:boolean;label?:string;small?:boolean}){
+export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePlacements=false,label='A decorated açaí bowl',small=false}:{bowl:BowlData;autoOrbit?:boolean;gesture?:'quick'|'drizzle'|'sprinkle'|'spread';drawColor?:string;onDraw?:(points:{x:number;y:number}[])=>void;interactionKey?:string;onPlace?:(x:number,y:number)=>void;onSelect?:(index:number)=>void;onMove?:(index:number,x:number,y:number)=>void;selectedIndex?:number;animatePlacements?:boolean;label?:string;small?:boolean}){
  const id=useId().replaceAll(':','');
  const root=useRef<HTMLDivElement>(null),pointer=useRef<{index:number;x:number;y:number}|null>(null);const [drag,setDrag]=useState<{index:number;x:number;y:number}|null>(null);
  const keyboard=(e:KeyboardEvent<HTMLDivElement>)=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();onPlace?.(50,50);}};

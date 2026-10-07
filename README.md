@@ -79,3 +79,13 @@ For a larger public launch, add infrastructure rate limiting and load testing. T
 Hosts choose 45/60/105-second timers and a mode for each round: Creative studio, 60-coin Budget battle, 45-second Quick serve, or Mirror menu. Mirror menu disables mutations and awards +2 for at least 75% similarity. Private server-assigned goals earn +1. A halfway Signature serve surprise earns +1 for a bowl title of at least three trimmed characters. Server scoring runs once per round.
 
 Reveal reactions are shared, limited to one per other player bowl, and do not award points. The collection unlocks cosmetic bowl finishes after 1, 3, 5, and 10 completed multiplayer games; completion and selection are saved in localStorage on the player device. Rematches have distinct IDs, so refreshing results cannot double-count completion. All ingredients remain available.
+
+
+## Five-minute cooking studio
+New rooms default to 300-second building rounds. Hosts can choose 105, 180, or 300 seconds; all modes use the chosen duration. Voting lasts up to 90 seconds with one synchronized eight-second rotating showcase per chef before early completion. All ready chefs can start the reveal early.
+
+Quick placement remains available. The prep counter supports strawberry, kiwi, and banana slicing by swipe or accessible button. Spread draws a base stroke; Pipe draws a bounded freehand sauce ribbon; Sprinkle creates up to 24 small pieces along a stroke. Budget prices and mutation rules apply to every placed piece. Freehand paths and spread marks are saved in room state.
+
+Customer requests score +1 each with +1 for a perfect order. A room-wide halfway twist scores +2; existing votes, private goals, signature naming, and mirror bonuses remain. Matching-pair twists use distinct pieces. Three-slot rounds receive a compatible simple customer order.
+
+Berry Artist and Perfect Order are earned from server-scored round bowls. Crowd Favorite requires three audience-award wins across finished matches (positive-vote ties count). Match-result records persist earned achievements and award counts. GET /api/game?profile=1 supplies authenticated browser rewards. Mosaic bowl, rose marble surface, and lustre drizzle are cosmetic only. Server saves validate special rewards against persisted achievements. Rewards become available after completing the match; solo practice does not unlock them.
