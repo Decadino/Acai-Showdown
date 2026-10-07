@@ -1,5 +1,6 @@
 import {FANTASY_INGREDIENTS} from './fantasy-ingredients.ts';
 import type {Bowl} from './game';
+export const SURPRISE_DELAY_MS=60_000;
 export const ORDERS=[
 {id:'tropical',customer:'Isla',title:'A little island escape',requests:['Use mango','Add a crunchy topping','Leave out chocolate'],ingredients:['mango','crunch','no-chocolate']},
 {id:'berry',customer:'Nova',title:'Berry beautiful',requests:['Use strawberries','Add blueberries','Finish with a drizzle'],ingredients:['strawberry','blueberry','drizzle']},
