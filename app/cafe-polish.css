@@ -18,3 +18,6 @@
 /* Keep studio controls below the canvas rather than overlapping its edge. */
 .bowl-studio .cafe-canvas .three-controls{margin-top:16px;padding-top:0}
 
+
+.showcase .cafe-canvas .three-controls{margin-top:16px;padding-top:0}
+
