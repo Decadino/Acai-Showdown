@@ -1,0 +1,14 @@
+/* Rounded, chunky lettering inspired by the supplied alphabet reference.
+   Modak is bundled locally under the SIL Open Font License in public/fonts. */
+@font-face{font-family:'Modak';src:url('/fonts/Modak-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+:root{--game-font:'Modak','Arial Rounded MT Bold',sans-serif}
+body{font-family:var(--game-font);font-size:18px;line-height:1.65;font-synthesis:none}
+:is(body,button,input,textarea,select,h1,h2,h3,h4,.brand,.brand div>span,.big-code,.timer,.rank,.eyebrow,[role=dialog],[role=listbox],[role=option]){font-family:var(--game-font)!important;font-weight:400!important;font-synthesis:none}
+:is(strong,b,em,small,label,p,span){font-synthesis:none}strong,b{font-weight:400}em{font-style:normal}
+:is(h1,h2,h3,h4){letter-spacing:.1px!important;line-height:1.25}.start-copy h1{line-height:1.16;letter-spacing:.3px!important}.start-copy em{font-style:normal}.intro{line-height:1.7}.brand{line-height:1;font-size:32px;letter-spacing:.5px}.brand div>span{font-size:13px;letter-spacing:1.8px;line-height:1.25}
+button,input,textarea,select{letter-spacing:.2px;line-height:1.5}input,textarea{font-size:16px}button{white-space:normal;overflow-wrap:break-word}.eyebrow{letter-spacing:1.1px;font-size:14px;line-height:1.6}
+:is(.muted,.hint,.cooking-hint,.mode-description,.settings-row span,.settings-note,.ingredient-price,.browser-count,.ingredient-owner,.fantasy-label,.three-hint,.voting-note,.pace-note,.game-facts,.score-goal-name){font-size:14px;line-height:1.7;letter-spacing:.2px}
+:is(.ingredient-tile,.collection-tabs button,.modes button,.tabs button,.countertop-picker button,.studio-mode button,.cooking-tools button){font-size:15px;line-height:1.5}.ingredient-choice .ingredient-tile{font-size:15px}.ingredient-feature p{font-size:15px}.ingredient-feature .eyebrow{font-size:13px}.fantasy-label{font-size:12px;letter-spacing:.7px}
+:is(.settings-row,.help-card,.customer-ticket,.twist-ticket,.scorecard,.rematch-card) p{line-height:1.75}.settings-row strong{font-size:18px}.settings-row span{line-height:1.65}.panel-heading{gap:12px}.panel-heading h2{line-height:1.3}.ingredient-search input{font-size:15px}.showcase-navigation button{font-size:18px}.big-code{letter-spacing:6px!important;line-height:1.3}.timer strong{line-height:1.1}.timer span{font-size:13px}.mode-description{display:block;padding-top:2px}
+@media(max-width:760px){.brand{font-size:27px}.brand div>span{font-size:11px;letter-spacing:1.3px}.start-copy h1{font-size:44px}.header-actions button{font-size:14px}.ingredient-choice .ingredient-tile{font-size:14px}.collection-tabs button,.countertop-picker button{font-size:14px}.mobile-studio-dock button{font-size:14px}.timer span{font-size:12px}}
+body *{font-family:var(--game-font)!important}
