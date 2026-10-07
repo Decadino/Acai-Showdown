@@ -1,4 +1,5 @@
 "use client";
+import {fitPiece} from '@/lib/bowl-bounds';
 import {useId,useRef,useState,type KeyboardEvent} from 'react';
 import {INGREDIENTS,type Bowl as BowlData,type Piece} from '@/lib/game';
 export function IngredientImage({index}:{index:number}){return <span className="ingredient-image" aria-hidden="true" style={{backgroundImage:'url(/images/ingredients-atlas.png)',backgroundPosition:`${(index%4)*100/3}% ${Math.floor(index/4)*100/3}%`}}/>}
@@ -14,7 +15,7 @@ export function Bowl2D({bowl,onPlace,onSelect,onMove,selectedIndex=-1,animatePla
  </div>
 }
 export function placePieces(id:string,x:number,y:number,mode:string,size:number):Piece[]{
- const item=INGREDIENTS.find(i=>i.id===id)!;const drizzle=item.category==='Drizzle';const out:Piece[]=[];const add=(px:number,py:number,rotation:number)=>{const distance=Math.hypot(px-50,py-50);if(distance>34){px=50+(px-50)*34/distance;py=50+(py-50)*34/distance;}out.push({id,x:px,y:py,rotation,size:drizzle?38:size});};
+ const item=INGREDIENTS.find(i=>i.id===id)!;const drizzle=item.category==='Drizzle';const out:Piece[]=[];const add=(px:number,py:number,rotation:number)=>{const distance=Math.hypot(px-50,py-50);if(distance>34){px=50+(px-50)*34/distance;py=50+(py-50)*34/distance;}out.push(fitPiece({id,x:px,y:py,rotation,size:drizzle?38:size}));};
  if(drizzle)add(50,50,-20);
  else if(mode==='single')add(x,y,Math.random()*50-25);
  else if(mode==='arc'){const angle=Math.atan2(y-50,x-50);for(let i=0;i<5;i++){const a=angle+(i-2)*.32;add(50+28*Math.cos(a),50+28*Math.sin(a),a*180/Math.PI+90);}}

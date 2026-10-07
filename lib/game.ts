@@ -1,3 +1,4 @@
+import {fitPiece} from './bowl-bounds.ts';
 import {GOALS,goalProgress,referenceBowl,similarity,type RoundMode} from './engagement.ts';
 export const ROUND_MS=105000;
 export const VOTE_MS=40000;
@@ -23,7 +24,7 @@ export function roundBudget(room:Room){return room.roundMode==='budget'||!room.m
 export function cleanBowl(input:unknown,budget:number|null=null):Bowl{
  if(!input||typeof input!=='object')throw Error('Your bowl could not be read.');const b=input as Bowl;
  if(!BASES.some(x=>x.id===b.base)||!Array.isArray(b.pieces)||b.pieces.length>MAX_PIECES)throw Error(`Use up to ${MAX_PIECES} toppings.`);
- const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
+ const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}}).map(fitPiece);
  if(budget!==null&&bowlCost({...b,pieces})>budget)throw Error(`This round has a ${budget}-coin budget. Remove some toppings before saving.`);
  if(b.gravity&&!['pour','toppings','sealed'].includes(b.gravity))throw Error('Invalid gravity stage.');
  return {...(['porcelain','mint','rose','midnight','gold'].includes(b.finish||'')?{finish:b.finish}:{}),base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
