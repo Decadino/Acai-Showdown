@@ -12,10 +12,10 @@ export const THEMES=[
 export const INGREDIENTS=[
  ['strawberry','Strawberry','Fruit'],['banana','Banana','Fruit'],['mango','Mango','Fruit'],['blueberry','Blueberry','Fruit'],['kiwi','Kiwi','Fruit'],['raspberry','Raspberry','Fruit'],['pineapple','Pineapple','Fruit'],['dragonfruit','Dragonfruit','Fruit'],['granola','Granola','Crunch'],['coconut','Coconut flakes','Crunch'],['almond','Almond slivers','Crunch'],['cacao','Cacao nibs','Crunch'],['chia','Chia seeds','Crunch'],['pistachio','Pistachio','Crunch'],['chocolate','Chocolate chips','Crunch'],['flower','Edible flowers','Finish'],['honey','Golden honey','Drizzle'],['cocoa','Chocolate sauce','Drizzle'],['peanut','Peanut butter','Drizzle'],['vanilla','Vanilla yogurt','Drizzle']
 ].map(([id,name,category],sprite)=>({id,name,category,sprite,price:[2,1,3,2,2,3,2,4,1,1,2,2,1,3,2,4,2,3,3,2][sprite]}));
-export const BASES=[{id:'classic',name:'Classic açaí',color:'#6a193e'},{id:'pitaya',name:'Pink pitaya',color:'#d63382'},{id:'blue',name:'Blue spirulina',color:'#2482a3'}];
-export type Piece={uid?:string;id:string;x:number;y:number;rotation:number;size:number};
-export type Bowl={base:string;pieces:Piece[];title:string;finish?:string;gravity?:'pour'|'toppings'|'sealed'};
-export const blankBowl=():Bowl=>({base:'classic',pieces:[],title:''});
+export const BASES=[{id:'classic',name:'Classic açaí',color:'#50245e'},{id:'pitaya',name:'Pink pitaya',color:'#d63382'},{id:'blue',name:'Blue spirulina',color:'#2482a3'}];
+export type Piece={layer?:number;uid?:string;id:string;x:number;y:number;rotation:number;size:number};
+export type Bowl={layers?:string[];base:string;pieces:Piece[];title:string;finish?:string;gravity?:'pour'|'toppings'|'sealed'};
+export const blankBowl=():Bowl=>({base:'classic',layers:['classic'],pieces:[],title:''});
 export type Player={goal?:string;bonuses?:{goal:number;surprise:number;copy:number};lastReaction?:number;mysteryId?:string;mysteryPiece?:string;id:string;name:string;joined:number;seen:number;active:boolean;score:number;ready:boolean;bowl:Bowl;ballot:string;vote:string|null;awardVotes?:Partial<Record<AwardId,string>>};
 export type Room={matchId?:string;roundSeconds?:number;modes?:RoundMode[];roundMode?:RoundMode;startedAt?:number;reference?:Bowl|null;reactions?:{id:string;from:string;ballot:string;kind:string;at:number}[];mutationDeck?:(Mutation|null)[];mutation?:Mutation|null;claims?:Record<string,string>;budgetRound?:number;audienceAwards?:boolean;code:string;host:string;phase:'lobby'|'build'|'vote'|'results'|'final';round:number;deadline:number;themes:number[];players:Player[];scored:boolean;created:number};
 export function bowlCost(bowl:Bowl){return bowl.pieces.reduce((total,p)=>total+(INGREDIENTS.find(i=>i.id===p.id)?.price||0),0);}
@@ -23,10 +23,11 @@ export function roundBudget(room:Room){return room.roundMode==='budget'||!room.m
 export function cleanBowl(input:unknown,budget:number|null=null):Bowl{
  if(!input||typeof input!=='object')throw Error('Your bowl could not be read.');const b=input as Bowl;
  if(!BASES.some(x=>x.id===b.base)||!Array.isArray(b.pieces)||b.pieces.length>MAX_PIECES)throw Error(`Use up to ${MAX_PIECES} toppings.`);
- const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');return {...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
+ const layers=b.layers===undefined?[b.base]:b.layers;if(!Array.isArray(layers)||layers.length<1||layers.length>6||!layers.every(id=>BASES.some(v=>v.id===id)||INGREDIENTS.some(v=>v.id===id)))throw Error('Use one to six cup layers.');
+ const pieces=b.pieces.map(p=>{if(!p||!INGREDIENTS.some(x=>x.id===p.id)||![p.x,p.y,p.rotation,p.size].every(Number.isFinite)||p.size<6||p.size>40||Math.hypot(p.x-50,p.y-50)>39)throw Error('Keep your ingredients inside the bowl.');if(p.layer!==undefined&&(!Number.isInteger(p.layer)||p.layer<0||p.layer>=layers.length))throw Error('Choose a valid layer.');return {...(p.layer!==undefined?{layer:p.layer}:{}),...(typeof p.uid==='string'&&/^[a-zA-Z0-9-]{1,40}$/.test(p.uid)?{uid:p.uid}:{}),id:p.id,x:p.x,y:p.y,rotation:p.rotation%360,size:p.size}});
  if(budget!==null&&bowlCost({...b,pieces})>budget)throw Error(`This round has a ${budget}-coin budget. Remove some toppings before saving.`);
  if(b.gravity&&!['pour','toppings','sealed'].includes(b.gravity))throw Error('Invalid gravity stage.');
- return {...(['porcelain','mint','rose','midnight','gold'].includes(b.finish||'')?{finish:b.finish}:{}),base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
+ return {layers,...(['porcelain','mint','rose','midnight','gold'].includes(b.finish||'')?{finish:b.finish}:{}),base:b.base,pieces,title:typeof b.title==='string'?b.title.trim().slice(0,32):''};
 }
 
 export const MUTATIONS=[
@@ -40,7 +41,7 @@ export type MutationId=typeof MUTATIONS[number]['id']|'gravity';
 export type Mutation={id:MutationId;color?:string};
 export const COLORS=[{id:'pink',name:'Pink',hex:'#ee6fa5'},{id:'gold',name:'Golden',hex:'#f4bf4e'},{id:'green',name:'Green',hex:'#83b848'},{id:'purple',name:'Purple',hex:'#9055cf'},{id:'blue',name:'Blue',hex:'#4caad9'}];
 const FOOD_COLORS:Record<string,string[]>={strawberry:['pink'],banana:['gold'],mango:['gold'],blueberry:['blue','purple'],kiwi:['green'],raspberry:['pink'],pineapple:['gold'],dragonfruit:['pink'],granola:['gold'],coconut:['white'],almond:['gold'],cacao:['brown'],chia:['purple'],pistachio:['green'],chocolate:['brown'],flower:['pink','purple'],honey:['gold'],cocoa:['brown'],peanut:['gold'],vanilla:['white']};
-export function colorScore(bowl:Bowl,color:string){let total=600,match=({classic:'purple',pitaya:'pink',blue:'blue'} as Record<string,string>)[bowl.base]===color?600:0;for(const p of bowl.pieces){const area=p.size*p.size*(INGREDIENTS.find(i=>i.id===p.id)?.category==='Drizzle'?.12:.65);total+=area;if(FOOD_COLORS[p.id]?.includes(color))match+=area;}return Math.round(match/total*100);}
+export function colorScore(bowl:Bowl,color:string){const bases=(bowl.layers||[bowl.base]).filter(id=>BASES.some(b=>b.id===id));let total=bases.length*600,match=bases.filter(id=>({classic:'purple',pitaya:'pink',blue:'blue'} as Record<string,string>)[id]===color).length*600;for(const p of bowl.pieces){const area=p.size*p.size*(INGREDIENTS.find(i=>i.id===p.id)?.category==='Drizzle'?.12:.65);total+=area;if(FOOD_COLORS[p.id]?.includes(color))match+=area;}return total?Math.round(match/total*100):0;}
 export function pickedTypes(bowl:Bowl){return 1+new Set(bowl.pieces.map(p=>p.id)).size;}
 function randomIndex(n:number){return crypto.getRandomValues(new Uint32Array(1))[0]%n;}
 export function rollMutations():(Mutation|null)[]{const pool=[...MUTATIONS];const deck:(Mutation|null)[]=[];for(let i=0;i<3;i++){if(i===0||randomIndex(100)<70){const choice=pool.splice(randomIndex(pool.length),1)[0];deck.push({id:choice.id,...(choice.id==='color'?{color:COLORS[randomIndex(COLORS.length)].id}:{})});}else deck.push(null);}return deck.sort(()=>Math.random()-.5);}
@@ -62,9 +63,9 @@ export function mutationError(next:Bowl,previous:Bowl,mutation:Mutation|null|und
  return null;
 }
 export function saveMutatedBowl(room:Room,player:Player,input:unknown){const next=cleanBowl(input,roundBudget(room));const message=mutationError(next,player.bowl,room.mutation,player.mysteryPiece,room.claims,player.id);if(message)throw Error(message);if(room.mutation?.id==='exclusive'){room.claims??={};for(const p of next.pieces)room.claims[p.id]=player.id;}player.bowl=next;return next;}
-export function revealMystery(room:Room,player:Player,input:unknown,x:number,y:number,size:number){
+export function revealMystery(room:Room,player:Player,input:unknown,x:number,y:number,size:number,layer=0){
  if(room.mutation?.id!=='mystery'||!player.mysteryId||player.mysteryPiece)throw Error('Your mystery ingredient has already been revealed.');
- const next=cleanBowl(input,roundBudget(room));const uid=crypto.randomUUID();const revealed=cleanBowl({...next,pieces:[...next.pieces,{uid,id:player.mysteryId,x,y,size,rotation:0}]},roundBudget(room));player.bowl=revealed;player.mysteryPiece=uid;return revealed;
+ const next=cleanBowl(input,roundBudget(room));const uid=crypto.randomUUID();const revealed=cleanBowl({...next,pieces:[...next.pieces,{uid,id:player.mysteryId,layer,x,y,size,rotation:0}]},roundBudget(room));player.bowl=revealed;player.mysteryPiece=uid;return revealed;
 }
 
 export function advance(room:Room,now:number){
