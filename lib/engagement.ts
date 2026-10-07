@@ -7,7 +7,8 @@ export function referenceBowl(seed:number):Bowl{const fruit=['strawberry','banan
 export function similarity(b:Bowl,reference:Bowl){const available=[...b.pieces];let sum=b.base===reference.base?1:0;for(const p of reference.pieces){let best=-1,d=Infinity;available.forEach((q,i)=>{if(q.id===p.id){const distance=Math.hypot(q.x-p.x,q.y-p.y)+Math.abs(q.size-p.size)*.5;if(distance<d){d=distance;best=i;}}});if(best>=0){sum+=Math.max(0,1-d/24);available.splice(best,1);}}return Math.max(0,Math.round(100*sum/(reference.pieces.length+1)-Math.max(0,b.pieces.length-reference.pieces.length)*2));}
 export const REACTIONS=[{id:'heart',emoji:'💜',name:'Love it'},{id:'sparkle',emoji:'✨',name:'So creative'},{id:'yum',emoji:'😋',name:'Would order'},{id:'fire',emoji:'🔥',name:'On fire'}] as const;
 export const COSMETICS=[
- {id:'porcelain',name:'Mochi bloom',games:0,color:'#fff3df',rim:'#fff8ed',textureRow:0,description:'Cream glaze · tiny pink blossoms'},
+ {id:'porcelain',name:'Classic white',games:0,color:'#fdf8f3',rim:'#fdf8f3',textureRow:-1,description:'Original white ceramic · default'},
+ {id:'mochi',name:'Mochi bloom',games:0,color:'#fff3df',rim:'#fff8ed',textureRow:0,description:'Cream glaze · tiny pink blossoms'},
  {id:'mint',name:'Matcha petals',games:1,color:'#a8c980',rim:'#f5efdc',textureRow:1,description:'Tea green · ivory petals'},
  {id:'rose',name:'Sakura milk',games:3,color:'#f4b4b2',rim:'#ffe8db',textureRow:2,description:'Blush pink · cherry blossoms'},
  {id:'midnight',name:'Moonlit waves',games:5,color:'#315675',rim:'#f3d699',textureRow:3,description:'Indigo glaze · golden waves'},
