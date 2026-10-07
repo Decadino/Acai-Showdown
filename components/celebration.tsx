@@ -1,8 +1,9 @@
 "use client";
+import {roundPoints} from '@/lib/game';
 import {useEffect,useState,type CSSProperties} from 'react';
 import {Crown,Sparkles} from 'lucide-react';
 import type {View} from '@/lib/game';
-export function roundWinners(room:View){const best=Math.max(0,...room.entries.map(e=>e.votes||0));return best>0?room.entries.filter(e=>e.votes===best):[];}
+export function roundWinners(room:View){const best=Math.max(0,...room.entries.map(e=>roundPoints(room,e)));return best>0?room.entries.filter(e=>roundPoints(room,e)===best):[];}
 export function Celebration({room}:{room:View}){
  const winners=roundWinners(room);const final=room.phase==='final';const top=Math.max(0,...room.players.map(p=>p.score));const overall=top>0?room.players.filter(p=>p.score===top):[];
  const won=final?overall.some(p=>p.id===room.me):winners.some(e=>e.mine);const names=final?overall.map(p=>p.name):winners.map(e=>e.name);const [burst,setBurst]=useState(true);
