@@ -92,4 +92,4 @@ export function publicRoom(room:Room,id:string,now:number){
 }
 export type View=ReturnType<typeof publicRoom>;
 
-function cleanStroke(input:unknown[]):{x:number;y:number}[]{return input.slice(0,96).map(v=>{const p=v as {x:number;y:number};if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))throw Error('Invalid drawing.');const x=p.x-50,y=p.y-50,d=Math.hypot(x,y),k=d>35?35/d:1;return {x:50+x*k,y:50+y*k};});}
+function cleanStroke(input:unknown[]):{x:number;y:number}[]{return (input.length<=256?input:Array.from({length:256},(_,i)=>input[Math.round(i*(input.length-1)/255)])).map(v=>{const p=v as {x:number;y:number};if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))throw Error('Invalid drawing.');const x=p.x-50,y=p.y-50,d=Math.hypot(x,y),k=d>35?35/d:1;return {x:50+x*k,y:50+y*k};});}

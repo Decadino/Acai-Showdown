@@ -20,7 +20,9 @@ export function drizzleGeometry(piece:Piece, toppings:Piece[], heights:number[],
   });
   points.push(new T.Vector3(x,(height+.028+Math.min(layer,12)*.004-.61)/scale,z));
  }
- const g=new T.TubeGeometry(new T.CatmullRomCurve3(points,false,'centripetal'),240,.018,8,false);
+ const curve=new T.CatmullRomCurve3(points,false,'centripetal');
+ const segments=Math.min(1024,Math.max(240,Math.ceil(curve.getLength()*scale*70)));
+ const g=new T.TubeGeometry(curve,segments,.018,8,false);
  const color=new T.Color(SAUCE_COLORS[piece.id]||'#e5a632');
  const colors=new Float32Array(g.getAttribute('position').count*3);
  for(let i=0;i<colors.length;i+=3){colors[i]=color.r;colors[i+1]=color.g;colors[i+2]=color.b;}
