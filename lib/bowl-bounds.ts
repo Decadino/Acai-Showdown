@@ -1,6 +1,7 @@
 import {FANTASY_BY_ID,isSauce} from './fantasy-ingredients.ts';
 // Conservative circular footprints include the entire ingredient mesh at any rotation.
 const FOOTPRINT:Record<string,number>={strawberry:.54,banana:.48,mango:.60,blueberry:.44,kiwi:.49,raspberry:.45,pineapple:.67,dragonfruit:.46,granola:.90,coconut:.53,almond:.45,cacao:.59,chia:.49,pistachio:.41,chocolate:.36,flower:.52};
+export function pieceRadius(piece:{id:string;size:number}){return (FOOTPRINT[piece.id]??(FANTASY_BY_ID[piece.id]?.65:.95))*piece.size;}
 export function fitPiece<T extends {id:string;x:number;y:number;size:number}>(piece:T):T{
  if(isSauce(piece.id))return {...piece,x:50,y:50};
  // 37 recipe units fit inside the edible surface, leaving clearance below the ceramic rim.

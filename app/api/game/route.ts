@@ -36,6 +36,8 @@ async function handle(req:Request){let cookie:string|null=null;try{
   }
   if(!me||!me.active)return response({error:'Join this room first.',needsJoin:true},403,cookie);
   if(now-me.seen>12000){me.seen=now;changed=true;}
+  // A retry after a lost response acknowledges the same persisted ballot.
+  if(body.round===room.round&&((action==='vote'&&me.vote===body.ballot)||(action==='award'&&AWARDS.some(a=>a.id===body.award)&&me.awardVotes?.[body.award as 'creative'|'tasty']===body.ballot)))return response(publicRoom(room,id,now),200,cookie);
   changed=advance(room,now)||changed;
   if(action==='start'||action==='next'||action==='rematch'){
    if(room.host!==id)throw Error('Only the host can start a round.');
