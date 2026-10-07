@@ -82,10 +82,13 @@ Reveal reactions are shared, limited to one per other player bowl, and do not aw
 
 
 ## Five-minute cooking studio
-New rooms default to 300-second building rounds. Hosts can choose 105, 180, or 300 seconds; all modes use the chosen duration. Voting lasts up to 90 seconds with one synchronized eight-second rotating showcase per chef before early completion. All ready chefs can start the reveal early.
+New rooms default to 300-second building rounds. Hosts can choose 105, 180, or 300 seconds; all modes use the chosen duration. Voting lasts up to 30 seconds with one synchronized three-second rotating showcase per chef before early completion. All ready chefs can start the reveal early.
 
 Quick placement remains available. The prep counter supports strawberry, kiwi, and banana slicing by swipe or accessible button. Spread draws a base stroke; Pipe draws a bounded freehand sauce ribbon; Sprinkle creates up to 24 small pieces along a stroke. Budget prices and mutation rules apply to every placed piece. Freehand paths and spread marks are saved in room state.
 
 Customer requests score +1 each with +1 for a perfect order. A room-wide halfway twist scores +2; existing votes, private goals, signature naming, and mirror bonuses remain. Matching-pair twists use distinct pieces. Three-slot rounds receive a compatible simple customer order.
 
 Berry Artist and Perfect Order are earned from server-scored round bowls. Crowd Favorite requires three audience-award wins across finished matches (positive-vote ties count). Match-result records persist earned achievements and award counts. GET /api/game?profile=1 supplies authenticated browser rewards. Mosaic bowl, rose marble surface, and lustre drizzle are cosmetic only. Server saves validate special rewards against persisted achievements. Rewards become available after completing the match; solo practice does not unlock them.
+
+
+Voting now lasts at most 30 seconds, with three-second rotating showcases. Existing voting rounds are shortened to at most 30 seconds on their next request. No Repeats retains its original single-owner claims.

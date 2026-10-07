@@ -1,6 +1,6 @@
 import {ROUND_MODES,REACTIONS} from '@/lib/engagement';
 import {database} from '@/lib/storage';
-import {saveMutatedBowl,revealMystery,rollMutations,AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
+import {VOTE_MS,saveMutatedBowl,revealMystery,rollMutations,AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store','Content-Type':'application/json'};
 async function identity(req:Request){let token=req.headers.get('cookie')?.match(/(?:^|;\s*)acai_session=([a-f0-9]{64})(?:;|$)/)?.[1];if(!token)token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));const id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return {id,cookie:`acai_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${new URL(req.url).protocol==='https:'?'; Secure':''}`};}
@@ -25,7 +25,7 @@ async function handle(req:Request){let cookie:string|null=null;try{
  const code=String(body.code||url.searchParams.get('code')||'').trim().toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code))throw Error('Enter the six-character room code.');
  for(let attempt=0;attempt<8;attempt++){
   const row=await db.prepare('SELECT data,version,expires FROM rooms WHERE code = ?').bind(code).first<{data:string;version:number;expires:number}>();if(!row||row.expires<now)return response({error:'Room not found or expired. Ask your host for a new code.'},404,cookie);
-  const room=JSON.parse(row.data) as Room;let me=room.players.find(p=>p.id===id);let changed=false;if(room.phase==='lobby'&&!room.studioVersion){room.roundSeconds=300;room.studioVersion=1;changed=true;}
+  const room=JSON.parse(row.data) as Room;let me=room.players.find(p=>p.id===id);let changed=false;if(room.phase==='vote'&&room.voteMs!==VOTE_MS){room.deadline=Math.min(room.deadline,now+VOTE_MS);room.voteMs=VOTE_MS;changed=true;}if(room.phase==='lobby'&&!room.studioVersion){room.roundSeconds=300;room.studioVersion=1;changed=true;}
   // Retire Gravity Flip in active rooms as well as already shuffled round decks.
   if(room.mutation?.id==='gravity'){room.mutation=null;changed=true;}
   if(room.mutationDeck?.some(m=>m?.id==='gravity')){room.mutationDeck=room.mutationDeck.map(m=>m?.id==='gravity'?null:m);changed=true;}

@@ -2,8 +2,9 @@ import {ORDERS,TWISTS,orderProgress,twistProgress,bowlAchievements} from './stud
 import {fitPiece} from './bowl-bounds.ts';
 import {GOALS,goalProgress,referenceBowl,similarity,type RoundMode} from './engagement.ts';
 export const ROUND_MS=300000;
-export const VOTE_MS=90000;
+export const VOTE_MS=30000;
 export const MAX_PLAYERS=6;
+export const SHOWCASE_MS=3000;
 export const MAX_PIECES=150;
 export const ROUND_BUDGET=60;
 export const AWARDS=[{id:"creative",name:"Most creative",description:"The most imaginative creation.",icon:"sparkles"},{id:"tasty",name:"Would actually eat",description:"The bowl you would order right now.",icon:"heart"}] as const;
@@ -19,7 +20,7 @@ export type Piece={uid?:string;id:string;x:number;y:number;rotation:number;size:
 export type Bowl={prepared?:string[];spread?:{x:number;y:number}[];countertop?:string;effect?:string;base:string;pieces:Piece[];title:string;finish?:string;gravity?:'pour'|'toppings'|'sealed'};
 export const blankBowl=():Bowl=>({base:'classic',pieces:[],title:''});
 export type Player={achievements?:string[];audienceWins?:number;goal?:string;bonuses?:{goal:number;surprise:number;copy:number;order?:number;twist?:number};lastReaction?:number;mysteryId?:string;mysteryPiece?:string;id:string;name:string;joined:number;seen:number;active:boolean;score:number;ready:boolean;bowl:Bowl;ballot:string;vote:string|null;awardVotes?:Partial<Record<AwardId,string>>};
-export type Room={studioVersion?:number;order?:string;twist?:string;matchId?:string;roundSeconds?:number;modes?:RoundMode[];roundMode?:RoundMode;startedAt?:number;reference?:Bowl|null;reactions?:{id:string;from:string;ballot:string;kind:string;at:number}[];mutationDeck?:(Mutation|null)[];mutation?:Mutation|null;claims?:Record<string,string>;budgetRound?:number;audienceAwards?:boolean;code:string;host:string;phase:'lobby'|'build'|'vote'|'results'|'final';round:number;deadline:number;themes:number[];players:Player[];scored:boolean;created:number};
+export type Room={voteMs?:number;studioVersion?:number;order?:string;twist?:string;matchId?:string;roundSeconds?:number;modes?:RoundMode[];roundMode?:RoundMode;startedAt?:number;reference?:Bowl|null;reactions?:{id:string;from:string;ballot:string;kind:string;at:number}[];mutationDeck?:(Mutation|null)[];mutation?:Mutation|null;claims?:Record<string,string>;budgetRound?:number;audienceAwards?:boolean;code:string;host:string;phase:'lobby'|'build'|'vote'|'results'|'final';round:number;deadline:number;themes:number[];players:Player[];scored:boolean;created:number};
 export function bowlCost(bowl:Bowl){return bowl.pieces.reduce((total,p)=>total+(INGREDIENTS.find(i=>i.id===p.id)?.price||0),0);}
 export function roundBudget(room:Room){return room.roundMode==='budget'||!room.modes&&room.round===room.budgetRound?ROUND_BUDGET:null;}
 export function cleanBowl(input:unknown,budget:number|null=null):Bowl{
@@ -71,9 +72,9 @@ export function revealMystery(room:Room,player:Player,input:unknown,x:number,y:n
 
 export function advance(room:Room,now:number){
  let changed=false;
- if(room.phase==='build'&&(now>=room.deadline||room.players.filter(p=>p.active).length>=2&&room.players.filter(p=>p.active).every(p=>p.ready))){room.phase='vote';room.deadline=now+VOTE_MS;changed=true;}
+ if(room.phase==='build'&&(now>=room.deadline||room.players.filter(p=>p.active).length>=2&&room.players.filter(p=>p.active).every(p=>p.ready))){room.phase='vote';room.voteMs=VOTE_MS;room.deadline=now+VOTE_MS;changed=true;}
  const eligible=room.players.filter(p=>p.active);
- if(room.phase==='vote'&&(now>=room.deadline||(eligible.length>0&&eligible.every(p=>p.vote&&(!room.audienceAwards||AWARDS.every(a=>p.awardVotes?.[a.id])))&&now>=room.deadline-VOTE_MS+Math.min(room.players.length*8000,48000)))){
+ if(room.phase==='vote'&&(now>=room.deadline||(eligible.length>0&&eligible.every(p=>p.vote&&(!room.audienceAwards||AWARDS.every(a=>p.awardVotes?.[a.id])))&&now>=room.deadline-VOTE_MS+Math.min(room.players.length*SHOWCASE_MS,18000)))){
   if(!room.scored){for(const p of room.players){const target=room.players.find(t=>t.ballot===p.vote&&t.id!==p.id);if(target)target.score++;}if(room.mutation?.id==='color')for(const p of room.players)if(colorScore(p.bowl,room.mutation.color||'pink')>=55)p.score++;for(const p of room.players){const goal=p.goal&&goalProgress(p.bowl,p.goal).complete?1:0,surprise=p.bowl.title.trim().length>=3?1:0,copy=room.roundMode==='copy'&&room.reference&&similarity(p.bowl,room.reference)>=75?2:0;const checked=orderProgress(p.bowl,room.order||'');const order=checked.filter(Boolean).length+(checked.length&&checked.every(Boolean)?1:0);const twist=room.twist&&twistProgress(p.bowl,room.twist)?2:0;p.bonuses={goal,surprise:room.startedAt?surprise:0,copy,order,twist};p.score+=goal+(room.startedAt?surprise:0)+copy+order+twist;p.achievements=[...new Set([...(p.achievements||[]),...bowlAchievements(p.bowl,room.order)])];for(const award of AWARDS){const counts=room.players.map(t=>room.players.filter(v=>v.id!==t.id&&v.awardVotes?.[award.id]===t.ballot).length);const max=Math.max(...counts);if(max>0&&counts[room.players.indexOf(p)]===max)p.audienceWins=(p.audienceWins||0)+1;}}room.scored=true;}
   room.phase=room.round>=3?'final':'results';room.deadline=0;changed=true;
  }
