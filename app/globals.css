@@ -82,3 +82,8 @@ button.practice-link:hover:not(:disabled){background:#e8daf7;border-color:#b48bd
 [data-theme="dark"] button.text-button{background:transparent;color:#dec5fa;border-color:transparent}
 [data-theme="dark"] button.text-button:hover:not(:disabled){background:#33233f;border-color:transparent}
 [data-theme="dark"] button.leaderboard-link{color:#dec5fa}
+
+/* Fantasy previews share the classic tile surface in dark mode. */
+[data-theme="dark"] .ingredient-tile:has(.fantasy-food-icon):not([aria-pressed="true"]){background:#2d233a;color:var(--ink);border-color:var(--line)}
+[data-theme="dark"] .ingredient-tile:has(.fantasy-food-icon):not([aria-pressed="true"]):hover:not(:disabled){background:#3a2b4b;border-color:#785798}
+[data-theme="dark"] .fantasy-label{background:#46305e;color:#e0bfff}
