@@ -97,3 +97,9 @@ button[data-slot="switch"][data-size="sm"]{width:38px;min-width:38px;height:24px
 .pace-custom-label{display:block;font-size:14px;margin-bottom:10px;font-weight:700}.party-settings .match-time-summary{font-weight:700;font-size:14px}.party-settings .pace-note{font-size:12px;line-height:1.65;max-width:55ch}
 [data-theme=dark] .party-settings .match-preset{background:#382832;color:#fff0db;border-color:#6a485a}[data-theme=dark] .party-settings .match-preset small{color:#d4b6c6}[data-theme=dark] .party-settings .match-preset[aria-pressed=true]{background:#61374c;border-color:#ce8ead;box-shadow:inset 0 0 0 1px #ce8ead;color:#fff0db}
 @media(max-width:430px){.match-presets{grid-template-columns:1fr}.party-settings .match-preset{gap:5px;padding:14px}}
+
+/* Keep the three round menus level regardless of description length. */
+.party-settings .mode-picker{align-items:start}
+.party-settings .mode-picker label{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:9px;min-width:0;line-height:1.5}
+.party-settings .mode-picker select{height:52px;min-height:52px;flex:none;box-sizing:border-box;margin:0}
+.party-settings .mode-picker label>span{margin:0;line-height:1.5}
