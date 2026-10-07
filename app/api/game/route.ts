@@ -45,7 +45,7 @@ async function handle(req:Request){let cookie:string|null=null;try{
   }else if(action==='save'||action==='submit'){
    if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');if(action==='submit'&&room.mutation?.id==='gravity'&&body.bowl?.gravity!=='sealed')throw Error('Choose your base last to seal the bowl before finishing.');saveMutatedBowl(room,me,body.bowl);if(action==='submit')me.ready=true;changed=true;
   }else if(action==='mystery'){
-   if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');revealMystery(room,me,body.bowl,body.x,body.y,body.size,body.layer);changed=true;
+   if(room.phase!=='build'||room.round!==body.round||me.ready)throw Error('This bowl is already locked for voting.');revealMystery(room,me,body.bowl,body.x,body.y,body.size);changed=true;
   }else if(action==='vote'){
    if(room.phase!=='vote'||room.round!==body.round)throw Error('Voting has closed.');if(me.vote)throw Error('Your vote is already recorded.');const target=room.players.find(p=>p.ballot===body.ballot);if(!target||target.id===id)throw Error('Choose another chef’s bowl.');me.vote=target.ballot;changed=true;advance(room,now);
    }else if(action==='award'){
