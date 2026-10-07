@@ -43,3 +43,11 @@ footer{border-top:2px dashed var(--fruit-border)}.settings-dialog [data-slot="di
 .cosmetic-shelf,[data-theme="dark"] .cosmetic-shelf{background:transparent;box-shadow:none;border:0;padding-top:0}
 [data-theme="dark"] .cosmetic-shelf>button{background:#3b2a34;border-color:var(--fruit-border);color:var(--ink)}
 [data-theme="dark"] .cosmetic-shelf>button>span,[data-theme="dark"] .cosmetic-shelf>p{color:var(--muted)}
+
+/* Shared switch geometry: fixed inset keeps the thumb entirely inside the track. */
+button[data-slot="switch"],[data-theme="dark"] button[data-slot="switch"]{position:relative;display:inline-block;flex:none;box-sizing:border-box;width:46px;height:28px;min-width:46px;min-height:28px;max-height:28px;padding:0;margin:0;border:0;border-radius:999px;background:#cbbbba;box-shadow:inset 0 0 0 1px #6e475b26;vertical-align:middle;overflow:hidden;transition:background .18s;cursor:pointer}
+button[data-slot="switch"][data-state="checked"]{background:#9c3870}
+button[data-slot="switch"] [data-slot="switch-thumb"]{position:absolute;display:block;box-sizing:border-box;left:4px;top:4px;width:20px;height:20px;margin:0;padding:0;border:0;border-radius:50%;background:#fff9ef;box-shadow:0 1px 3px #43284030;transform:translateX(0);transition:transform .18s;pointer-events:none}
+button[data-slot="switch"] [data-slot="switch-thumb"][data-state="checked"]{transform:translateX(18px)}
+[data-theme="dark"] button[data-slot="switch"]{background:#70545f}[data-theme="dark"] button[data-slot="switch"][data-state="checked"]{background:#a44978}
+button[data-slot="switch"][data-size="sm"]{width:38px;min-width:38px;height:24px;min-height:24px;max-height:24px}button[data-slot="switch"][data-size="sm"] [data-slot="switch-thumb"]{width:16px;height:16px}button[data-slot="switch"][data-size="sm"] [data-slot="switch-thumb"][data-state="checked"]{transform:translateX(14px)}
