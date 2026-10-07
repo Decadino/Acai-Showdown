@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./fruity.css";
 
 export const metadata: Metadata = {
   title: "Açaí Showdown — The Bowl Studio",
-  description: "A multiplayer bowl-making party game. Decorate for 1 minute 45 seconds, vote anonymously, and win with friends.",
+  description: "A multiplayer bowl-making party game. Build colorful bowls, vote anonymously, and win with friends.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
