@@ -14,3 +14,7 @@
 [data-motion=reduced] .showcase-track span{transition:none}[data-motion=reduced] .cinematic-bowl{animation:none}
 
 .ingredient-sauce-preview.drizzle-swatch{display:block;position:relative;transform:rotate(-12deg)}.ingredient-sauce-preview.drizzle-swatch>span{position:absolute;display:block;width:75%;height:10px;border-radius:10px;background:currentColor;left:12%;top:20%;box-shadow:0 2px 2px #50223920}.ingredient-sauce-preview.drizzle-swatch>span:nth-child(2){top:45%;left:22%;width:65%}.ingredient-sauce-preview.drizzle-swatch>span:nth-child(3){top:70%;left:12%;width:75%}
+
+/* Keep studio controls below the canvas rather than overlapping its edge. */
+.bowl-studio .cafe-canvas .three-controls{margin-top:16px;padding-top:0}
+
