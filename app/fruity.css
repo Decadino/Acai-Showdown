@@ -114,5 +114,5 @@ button[data-slot="switch"][data-size="sm"]{width:38px;min-width:38px;height:24px
 .party-settings .mode-option{display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:0;line-height:1.5}
 .party-settings .mode-title{font-size:14px;font-weight:700}
 .party-settings .mode-option [data-slot="select-trigger"]{width:100%;height:52px;min-height:52px;flex:none;box-sizing:border-box;margin:0;padding:12px 15px;font-size:15px;font-weight:700;border-radius:15px}
-.party-settings .mode-description{font-size:13px;line-height:1.5;font-weight:400;color:#79576a}
+.party-settings .mode-description{font-size:14px;line-height:1.6;font-weight:500;color:#f0e1fa}
 [data-theme=dark] .party-settings .mode-description{color:#d9bbc9}
