@@ -23,13 +23,15 @@ export function placePieces(id:string,x:number,y:number,mode:string,size:number)
  else {for(let i=0;i<5;i++){const a=i*2.4;add(x+Math.cos(a)*(5+i*1.7),y+Math.sin(a)*(5+i*1.7),i*63);}}
  return out;
 }
-// A deliberately plated hero bowl: small fruit fans, a compact crunch section, and breathing room.
+// A generous cafe bowl, plated in curved fruit bands with small finishing details.
 export const sampleBowl:BowlData={base:'classic',title:'The violet hour',pieces:[
- ...[{x:70,y:38},{x:70,y:47},{x:66,y:56}].map((p,i)=>({id:'banana',...p,size:15,rotation:-15+i*12})),
- ...[{x:33,y:62},{x:42,y:66},{x:51,y:66}].map((p,i)=>({id:'strawberry',...p,size:13,rotation:-35+i*25})),
- ...[{x:34,y:32},{x:42,y:30},{x:50,y:31}].map(p=>({id:'blueberry',...p,size:9,rotation:0})),
- ...[{x:29,y:43},{x:28,y:51},{x:34,y:53}].map((p,i)=>({id:'granola',...p,size:7,rotation:i*40})),
- {id:'coconut',x:32,y:45,size:6,rotation:20},
- {id:'flower',x:61,y:65,size:7,rotation:-12},
- {id:'honey',x:50,y:50,size:23,rotation:0,path:Array.from({length:32},(_,i)=>({x:50+7*Math.sin(i/31*Math.PI*5),y:39+i/31*21}))}
-]};
+ ...[{x:31,y:31},{x:29,y:41},{x:30,y:51},{x:34,y:61},{x:41,y:68}].map((p,i)=>({id:'banana',...p,size:17,rotation:-20+i*9})),
+ ...[{x:47,y:31},{x:47,y:45},{x:48,y:59}].map((p,i)=>({id:'kiwi',...p,size:17,rotation:12+i*14})),
+ ...[{x:62,y:28},{x:66,y:38},{x:67,y:48},{x:64,y:58},{x:58,y:67},{x:49,y:73}].map((p,i)=>({id:'strawberry',...p,size:16,rotation:-25+i*13})),
+ ...[{x:24,y:60},{x:28,y:69},{x:36,y:76},{x:46,y:78},{x:57,y:76},{x:67,y:71},{x:74,y:63}].map(p=>({id:'blueberry',...p,size:10,rotation:0})),
+ ...[{x:39,y:23},{x:47,y:22},{x:54,y:23},{x:35,y:28},{x:43,y:27}].map((p,i)=>({id:'granola',...p,size:7,rotation:i*37})),
+ ...[{x:37,y:37},{x:42,y:49},{x:53,y:39},{x:55,y:55},{x:37,y:57},{x:59,y:30}].map((p,i)=>({id:'coconut',...p,size:6,rotation:i*47})),
+ ...[{x:73,y:40},{x:76,y:49},{x:73,y:54}].map((p,i)=>({id:'mango',...p,size:9,rotation:15+i*25})),
+ {id:'flower',x:57,y:59,size:8,rotation:-12},
+ {id:'honey',x:50,y:50,size:28,rotation:0,path:Array.from({length:48},(_,i)=>({x:50+22*Math.sin(i/47*Math.PI*7),y:25+i/47*49}))}
+].map(fitPiece)};
