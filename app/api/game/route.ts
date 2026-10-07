@@ -1,11 +1,12 @@
+import {validateChefName,friendlyDisplayName} from '@/lib/name-filter';
 import {ROUND_MODES,REACTIONS} from '@/lib/engagement';
 import {database} from '@/lib/storage';
 import {VOTE_MS,saveMutatedBowl,revealMystery,rollMutations,AWARDS,roundBudget,advance,blankBowl,cleanBowl,MAX_PLAYERS,publicRoom,startRound,THEMES,type Room,type Player} from '@/lib/game';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store','Content-Type':'application/json'};
 async function identity(req:Request){let token=req.headers.get('cookie')?.match(/(?:^|;\s*)acai_session=([a-f0-9]{64})(?:;|$)/)?.[1];if(!token)token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,'0')).join('');const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));const id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return {id,cookie:`acai_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000${new URL(req.url).protocol==='https:'?'; Secure':''}`};}
-function response(data:unknown,status=200,cookie:string|null=null){return new Response(JSON.stringify(data),{status,headers:{...headers,...(cookie?{'Set-Cookie':cookie}:{})}})}
-function player(id:string,name:unknown,now:number):Player{if(typeof name!=='string'||!name.trim()||name.trim().length>20)throw Error('Enter a chef name of 1–20 characters.');return {id,name:name.trim(),joined:now,seen:now,active:true,score:0,ready:false,bowl:blankBowl(),ballot:crypto.randomUUID(),vote:null};}
+function response(data:unknown,status=200,cookie:string|null=null){return new Response(JSON.stringify(data,(key,value)=>key==='name'&&typeof value==='string'?friendlyDisplayName(value):value),{status,headers:{...headers,...(cookie?{'Set-Cookie':cookie}:{})}})}
+function player(id:string,name:unknown,now:number):Player{const cleanName=validateChefName(name);return {id,name:cleanName,joined:now,seen:now,active:true,score:0,ready:false,bowl:blankBowl(),ballot:crypto.randomUUID(),vote:null};}
 async function handle(req:Request){let cookie:string|null=null;try{
  const auth=await identity(req);cookie=auth.cookie;const id=auth.id;const url=new URL(req.url);const now=Date.now();
  if(req.method==='POST'){const origin=req.headers.get('origin');if(origin&&origin!==url.origin)return response({error:'Please open the game directly and try again.'},403,cookie);if(Number(req.headers.get('content-length')||0)>192000)return response({error:'That bowl has too much data.'},413,cookie);}
@@ -31,7 +32,7 @@ async function handle(req:Request){let cookie:string|null=null;try{
   if(room.mutationDeck?.some(m=>m?.id==='gravity')){room.mutationDeck=room.mutationDeck.map(m=>m?.id==='gravity'?null:m);changed=true;}
   for(const p of room.players)if(p.bowl.gravity){delete p.bowl.gravity;changed=true;}
   if(action==='join'){
-   if(me){me.active=true;me.seen=now;changed=true;}else{if(room.phase!=='lobby')throw Error('This game has started. Join after the host opens a new game.');if(room.players.length>=MAX_PLAYERS)throw Error('This room is full. Up to six chefs can play.');me=player(id,body.name,now);room.players.push(me);changed=true;}
+   if(me){me.name=validateChefName(body.name);me.active=true;me.seen=now;changed=true;}else{if(room.phase!=='lobby')throw Error('This game has started. Join after the host opens a new game.');if(room.players.length>=MAX_PLAYERS)throw Error('This room is full. Up to six chefs can play.');me=player(id,body.name,now);room.players.push(me);changed=true;}
   }
   if(!me||!me.active)return response({error:'Join this room first.',needsJoin:true},403,cookie);
   if(now-me.seen>12000){me.seen=now;changed=true;}
